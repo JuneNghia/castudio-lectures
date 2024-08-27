@@ -2,6 +2,7 @@ import { Button, Checkbox, Form, FormProps, Input } from "antd";
 import logoImg from "@renderer/assets/logo.png";
 import { Link } from "react-router-dom";
 import notify from "@renderer/common/function/notify";
+import { Helmet } from "react-helmet";
 
 type FieldType = {
   password?: string;
@@ -11,7 +12,7 @@ type FieldType = {
 };
 
 const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
-  notify('success', values.email)
+  notify("success", values.email);
 };
 
 const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
@@ -23,6 +24,10 @@ const macAddress = await window.electronAPI.getMacAddress();
 const SignIn = () => {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
+      <Helmet>
+        <title>ĐĂNG NHẬP</title>
+      </Helmet>
+
       <div className="mb-8">
         <img src={logoImg} width={200} />
       </div>
@@ -81,7 +86,12 @@ const SignIn = () => {
         </Form.Item>
 
         <Form.Item wrapperCol={{ offset: 10 }}>
-          <Button  size="large" className="w-[30%]" type="primary" htmlType="submit">
+          <Button
+            size="large"
+            className="w-[30%]"
+            type="primary"
+            htmlType="submit"
+          >
             Đăng nhập
           </Button>
         </Form.Item>

@@ -1,6 +1,7 @@
 import { Button, Form, FormProps, Input } from "antd";
 import logoImg from "@renderer/assets/logo.png";
 import { Link } from "react-router-dom";
+import { Helmet } from 'react-helmet'
 
 type FieldType = {
   password?: string;
@@ -22,6 +23,10 @@ const macAddress = await window.electronAPI.getMacAddress();
 const SignUp = () => {
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
+      <Helmet>
+        <title>ĐĂNG KÝ TÀI KHOẢN</title>
+      </Helmet>
+
       <div className="mb-8">
         <img src={logoImg} width={200} />
       </div>

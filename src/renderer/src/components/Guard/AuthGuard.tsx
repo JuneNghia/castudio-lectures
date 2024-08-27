@@ -1,7 +1,7 @@
 import SignIn from "@renderer/containers/Auth/SignIn";
 
 const AuthGuard = ({ children }: { children: JSX.Element }) => {
-  const isLoggedIn = false;
+  const isLoggedIn = true;
 
   if (!isLoggedIn) {
     return <SignIn />;

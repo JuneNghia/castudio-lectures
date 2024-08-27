@@ -8,7 +8,8 @@ const notify = (type: "success" | "error" | "info", text: string | undefined) =>
     closeOnClick: true,
     pauseOnHover: true,
     draggable: true,
-    theme: "dark",
+    theme: "colored",
+    limit: 1,
     transition: Slide,
   };
   if (type === "success") {

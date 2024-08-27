@@ -1,16 +1,14 @@
-import React, { Fragment } from 'react'
-import { Helmet } from 'react-helmet'
+import { Fragment } from "react";
+import { Helmet } from "react-helmet";
 
 const index = () => {
   return (
     <Fragment>
-        <Helmet>
-            <title>QUẢN LÝ LỚP HỌC</title>
-        </Helmet>
-
-        
+      <Helmet>
+        <title>QUẢN LÝ LỚP HỌC</title>
+      </Helmet>
     </Fragment>
-  )
-}
+  );
+};
 
-export default index
+export default index;

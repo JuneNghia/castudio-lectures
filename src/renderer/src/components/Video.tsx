@@ -40,7 +40,7 @@ const Video = memo(
     return (
       <>
         <div className="py-4 px-4 flex items-center gap-x-4">
-          <div onClick={handleBack}>
+          <div className="w-fit" onClick={handleBack}>
             <Tooltip title="Quay lại">
               <Button>
                 <ArrowLeftOutlined />

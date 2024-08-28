@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const token = localStorage.getItem("access_token");
+const token = await window.electronAPI.readToken();
 
 const axiosConfig = axios.create({
   baseURL: import.meta.env.VITE_API_URL,

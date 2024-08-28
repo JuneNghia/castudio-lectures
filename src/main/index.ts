@@ -1,12 +1,15 @@
 import { app, shell, BrowserWindow, ipcMain } from "electron";
-import { join } from "path";
+import path, { join } from "path";
 import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import os from "os";
+import fs from "fs";
+
+const tokenFilePath = path.join(app.getPath("userData"), "jwtToken.json");
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 900,
+    width: 1368,
     height: 670,
     show: false,
     autoHideMenuBar: true,
@@ -22,7 +25,7 @@ function createWindow(): void {
     mainWindow.show();
   });
 
-  mainWindow.setContentProtection(true);
+  // mainWindow.setContentProtection(true);
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
@@ -38,11 +41,7 @@ function createWindow(): void {
   }
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  // Set app user model id for windows
   electronApp.setAppUserModelId("com.electron");
 
   // Default open or close DevTools by F12 in development
@@ -60,7 +59,6 @@ app.whenReady().then(() => {
 
       if (networkInterface) {
         for (const details of networkInterface) {
-          // Chỉ lấy địa chỉ MAC của IPv4 và trạng thái internal là false (không phải loopback)
           if (details.family === "IPv4" && !details.internal) {
             return details.mac;
           }
@@ -71,10 +69,31 @@ app.whenReady().then(() => {
     return undefined;
   });
 
-  // IPC test
-  ipcMain.on("ping", () => console.log("pong"));
+  ipcMain.handle("save-token", (_, token) => {
+    fs.writeFileSync(tokenFilePath, JSON.stringify({ token }));
+  });
 
-  ipcMain.on("closeApp", () => app.quit());
+  ipcMain.handle("reset-app", () => {
+    app.relaunch();
+    app.exit();
+  });
+
+  ipcMain.handle("read-token", async () => {
+    if (fs.existsSync(tokenFilePath)) {
+      const data = fs.readFileSync(tokenFilePath).toString();
+      const { token } = await JSON.parse(data);
+      return token;
+    }
+    return null;
+  });
+
+  ipcMain.handle("delete-token", () => {
+    if (fs.existsSync(tokenFilePath)) {
+      fs.unlinkSync(tokenFilePath);
+      return true;
+    }
+    return false;
+  });
 
   createWindow();
 
@@ -93,6 +112,3 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
-
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.

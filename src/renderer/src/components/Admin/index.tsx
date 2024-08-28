@@ -29,9 +29,10 @@ const AdminPage = () => {
                     borderBottom: "1px solid #ccc",
                   },
                 }}
+                onClick={() => handleClick(menu.url)}
                 className="border border-blue-700 min-h-[200px] hover:bg-blue-200 cursor-pointer"
                 title={
-                  <div onClick={() => handleClick(menu.url)}>
+                  <div>
                     {menu.icon}
                     <span className="ml-3 font-bold">{menu.name}</span>
                   </div>

@@ -1,27 +1,43 @@
-import { Button, Checkbox, Form, FormProps, Input } from "antd";
+import { Button, Checkbox, Form, FormProps, Input, Tooltip } from "antd";
 import logoImg from "@renderer/assets/logo.png";
 import { Link } from "react-router-dom";
-import notify from "@renderer/common/function/notify";
 import { Helmet } from "react-helmet";
+import useAuth from "@renderer/hooks/useAuth";
+import notify from "@renderer/common/function/notify";
 
 type FieldType = {
-  password?: string;
-  email?: string;
+  password: string;
+  email: string;
   remember?: string;
-  macAddress?: string;
-};
-
-const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
-  notify("success", values.email);
-};
-
-const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
-  console.log("Failed:", errorInfo);
+  macAddress: string;
 };
 
 const macAddress = await window.electronAPI.getMacAddress();
 
 const SignIn = () => {
+  const auth = useAuth();
+
+  const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
+    auth
+      .signIn(values.email, values.password, values.macAddress)
+      .then(() => {
+        notify("success", "Đăng nhập thành công");
+
+        setTimeout(() => {
+          window.electronAPI.resetApp();
+        }, 500);
+      })
+      .catch((err) => {
+        notify("error", err.response?.data?.message);
+      });
+  };
+
+  const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
+    errorInfo
+  ) => {
+    console.log("Failed:", errorInfo);
+  };
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
       <Helmet>
@@ -36,7 +52,11 @@ const SignIn = () => {
         labelCol={{ span: 5 }}
         wrapperCol={{ span: 16 }}
         style={{ width: "100%" }}
-        initialValues={{ remember: true }}
+        initialValues={{
+          email: "nguyenminhtrungnghia@gmail.com",
+          password: "Nmtn2006",
+          remember: true,
+        }}
         onFinish={onFinish}
         onFinishFailed={onFinishFailed}
         autoComplete="off"
@@ -74,7 +94,11 @@ const SignIn = () => {
           wrapperCol={{ offset: 5, span: 16 }}
         >
           <div className="flex justify-between">
-            <Checkbox>Lưu đăng nhập</Checkbox>
+            <Tooltip title="Duy trì đăng nhập trong 7 ngày">
+              <Checkbox disabled checked>
+                Duy trì đăng nhập
+              </Checkbox>
+            </Tooltip>
 
             <div>
               Chưa có tài khoản?{" "}

@@ -21,7 +21,7 @@ export const listAdminMenu = [
   {
     name: "Quản lý video",
     description: "Tạo danh sách video theo lớp học",
-    url: "/admin/user",
+    url: "/admin/video",
     icon: <VideoCameraOutlined />,
   },
 ];

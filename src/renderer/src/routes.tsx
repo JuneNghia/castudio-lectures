@@ -6,6 +6,13 @@ import { lazy } from "react";
 const SignIn = lazy(() => import("./containers/Auth/SignIn"));
 const SignUp = lazy(() => import("./containers/Auth/SignUp"));
 const Homepage = lazy(() => import("./containers/Home"));
+const ClassManagement = lazy(
+  () => import("./components/Admin/ClassManagement")
+);
+const UserManagement = lazy(() => import("./components/Admin/UserManagement"));
+const VideoManagement = lazy(
+  () => import("./components/Admin/VideoManagement")
+);
 
 const router = createHashRouter([
   {
@@ -19,6 +26,18 @@ const router = createHashRouter([
       {
         path: "/",
         element: <Homepage />,
+      },
+      {
+        path: "/admin/class",
+        element: <ClassManagement />,
+      },
+      {
+        path: "/admin/user",
+        element: <UserManagement />,
+      },
+      {
+        path: "/admin/video",
+        element: <VideoManagement />,
       },
     ],
   },

@@ -65,6 +65,7 @@ const SignIn = () => {
           label="MAC"
           name="macAddress"
           initialValue={macAddress}
+          hidden
         >
           <Input disabled />
         </Form.Item>

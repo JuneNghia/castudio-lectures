@@ -53,7 +53,7 @@ const ClassManagement = () => {
 
   useEffect(() => {
     validate();
-  }, [listClasses, validate]);
+  }, [dataClasses, validate]);
 
   const handleInputChange = useCallback(
     (id: string, field: string, value: string) => {
@@ -205,7 +205,7 @@ const ClassManagement = () => {
 
               <Form.Item label="Mô tả">
                 <Input
-                  value={item.description}
+                  value={item.description ? item.description : ""}
                   onChange={(e) =>
                     handleInputChange(item.id, "description", e.target.value)
                   }

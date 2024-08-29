@@ -1,5 +1,5 @@
 import { ArrowLeftOutlined } from "@ant-design/icons";
-import { VideoDrive } from "@renderer/interfaces/video.interface";
+import { Video as VideoType } from "@renderer/interfaces/video.interface";
 import { Button, Tooltip } from "antd";
 import {
   Dispatch,
@@ -19,8 +19,8 @@ const Video = memo(
     data,
     setData,
   }: {
-    data: VideoDrive;
-    setData: Dispatch<SetStateAction<VideoDrive | null>>;
+    data: VideoType;
+    setData: Dispatch<SetStateAction<VideoType | null>>;
   }) => {
     const [isLoading, setIsLoading] = useState(true);
 
@@ -49,7 +49,7 @@ const Video = memo(
           </div>
           <div>
             Bạn đang xem bài giảng{" "}
-            <span className="font-bold">{data.title}</span>
+            <span className="font-bold">{data.name}</span>
           </div>
         </div>
         <div className="w-full h-full justify-center flex items-center">

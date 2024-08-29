@@ -10,6 +10,7 @@ import {
   Form,
   Select,
   Tag,
+  PaginationProps,
 } from "antd";
 import { useUser } from "@renderer/hooks/useUser";
 import { User } from "@renderer/interfaces/user.interface";
@@ -36,6 +37,8 @@ const options = [
   },
 ];
 
+const showTotal: PaginationProps['showTotal'] = (total) => `Tổng cộng có ${total} người dùng`;
+
 const UserManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -46,6 +49,7 @@ const UserManagement = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [dataUsers, setDataUsers] = useState<User[]>([]);
   const [isActive, setIsActive] = useState<string>("0");
+  const [selectedClassId, setSelectedClassId] = useState<string>("undefined");
   const {
     listClasses,
     isPending: isPendingClass,
@@ -65,6 +69,7 @@ const UserManagement = () => {
     size: pageSize,
     search: searchText,
     isActive: isActive === "0" ? undefined : isActive === "1" ? true : false,
+    classId: selectedClassId === "undefined" ? undefined : selectedClassId,
   });
 
   // Xử lý tìm kiếm
@@ -156,16 +161,35 @@ const UserManagement = () => {
       </div>
 
       <div className="p-4">
-        <div className="w-full mb-4">
-          <Select
-            options={options}
-            className="w-[200px]"
-            value={isActive}
-            onChange={(value) => setIsActive(value)}
-          />
+        <div className="w-full mb-4 flex gap-x-6">
+          <div className="flex items-center gap-x-3">
+            <span>Theo trạng thái: </span>
+            <Select
+              options={options}
+              className="min-w-[200px]"
+              value={isActive}
+              onChange={(value) => setIsActive(value)}
+            />
+          </div>
+          <div className="flex items-center gap-x-3">
+            <span>Theo lớp học: </span>
+            <Select
+              placeholder="Tất cả"
+              className="min-w-[200px]"
+              onChange={(value) => setSelectedClassId(value)}
+              value={selectedClassId}
+            >
+              <Select.Option value={"undefined"}>Tất cả</Select.Option>
+              {classes.map((item) => (
+                <Select.Option key={item.id} value={item.id}>
+                  {item.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
         </div>
         <Search
-          placeholder="Tìm kiếm theo tên hoặc email"
+          placeholder="Tìm kiếm theo tên, email hoặc địa chỉ MAC"
           onSearch={handleSearch}
           style={{ marginBottom: 16 }}
         />
@@ -184,6 +208,8 @@ const UserManagement = () => {
           pageSize={pageSize}
           onChange={handlePageChange}
           showSizeChanger
+          showLessItems
+          showTotal={showTotal}
           pageSizeOptions={[5, 10, 20, 50]}
           style={{ marginTop: 16 }}
         />

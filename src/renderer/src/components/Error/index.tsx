@@ -64,7 +64,7 @@ const Error = ({
   return (
     <>
       <Helmet>
-        <title>{dataErr.title}</title>
+        <title>{dataErr.title.toUpperCase()}</title>
       </Helmet>
       <div
         className="h-screen w-screen flex justify-center items-center"

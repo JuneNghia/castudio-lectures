@@ -3,12 +3,12 @@ import { useCallback, useState } from "react";
 import { Helmet } from "react-helmet";
 import Video from "../Video";
 import notify from "@renderer/common/function/notify";
-import { VideoDrive } from "@renderer/interfaces/video.interface";
+import { Video as VideoType } from "@renderer/interfaces/video.interface";
 
 const UserPage = () => {
-  const [dataVideo, setDataVideo] = useState<VideoDrive | null>(null);
+  const [dataVideo, setDataVideo] = useState<VideoType | null>(null);
 
-  const handleClick = useCallback((data: VideoDrive | null) => {
+  const handleClick = useCallback((data: VideoType | null) => {
     if (data) {
       setDataVideo(data);
     } else {
@@ -32,14 +32,18 @@ const UserPage = () => {
             grid={{ gutter: 16, column: 3 }}
             dataSource={[
               {
-                title: "Buổi 1",
+                url: "1-OrsePUAkO6VkuTHVCGJ13F1ytpwIu7c",
+                name: "Buổi 1",
                 description: "Dạy về khái niệm cơ bản Revit",
                 id: "1-OrsePUAkO6VkuTHVCGJ13F1ytpwIu7c",
+                class: null,
               },
               {
-                title: "Buổi 2",
+                name: "Buổi 2",
+                url: "1obNzVS7tEyKt37Tfl_XeQkTuqtCkM6LW",
                 description: "Các phiên bản revit",
                 id: "1obNzVS7tEyKt37Tfl_XeQkTuqtCkM6LW",
+                class: null,
               },
             ]}
             renderItem={(video, index) => (
@@ -55,7 +59,7 @@ const UserPage = () => {
                   title={
                     <div>
                       <span className="ml-3 font-bold">
-                        {index + 1}. {video.title}
+                        {index + 1}. {video.name}
                       </span>
                     </div>
                   }

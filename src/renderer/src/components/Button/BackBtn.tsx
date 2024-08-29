@@ -21,7 +21,7 @@ const BackBtn = ({ tooltipTitle, text, handleClick }: Props) => {
   }, []);
   return (
     <div className="w-fit" onClick={handleClickBtn}>
-      <Tooltip title={tooltipTitle || "Quay lại"}>
+      <Tooltip title={tooltipTitle || undefined}>
         <Button>
           <ArrowLeftOutlined />
           <span>{text || "Quay lại trang chủ"}</span>

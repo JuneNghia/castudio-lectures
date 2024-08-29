@@ -1,11 +1,25 @@
 import { RouterProvider } from "react-router-dom";
 import router from "./routes";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Loader from "./components/Loader";
 import { Slide, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Error from "./components/Error";
+import { checkHealth } from "./services/health.service";
 
 function App(): JSX.Element {
+  const [isOK, setIsOK] = useState(true);
+
+  useEffect(() => {
+    checkHealth().catch(() => {
+      setIsOK(false);
+    });
+  }, []);
+
+  if (!isOK) {
+    return <Error />;
+  }
+
   return (
     <Suspense fallback={<Loader />}>
       <RouterProvider router={router} />

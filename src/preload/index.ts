@@ -9,7 +9,8 @@ contextBridge.exposeInMainWorld("electronAPI", {
   saveToken: (token: string) => ipcRenderer.invoke("save-token", token),
   readToken: async () => await ipcRenderer.invoke("read-token"),
   deleteToken: () => ipcRenderer.invoke("delete-token"),
-  resetApp: () => ipcRenderer.invoke('reset-app')
+  resetApp: () => ipcRenderer.invoke("reset-app"),
+  getVersion: async () => await ipcRenderer.invoke("get-version"),
 });
 
 if (process.contextIsolated) {

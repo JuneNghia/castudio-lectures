@@ -4,33 +4,34 @@ import {
   DeleteOutlined,
   QuestionCircleOutlined,
 } from "@ant-design/icons";
+import showLoading from "@renderer/common/function/showLoading";
+import {
+  showAlert,
+  showAlertConfirm,
+  showAlertError,
+} from "@renderer/common/function/swalAlert";
 import BackBtn from "@renderer/components/Button/BackBtn";
+import Error from "@renderer/components/Error";
+import Loader from "@renderer/components/Loader";
+import { useClass } from "@renderer/hooks/useClass";
+import { Class } from "@renderer/interfaces/class.interface";
+import { updatedClasses } from "@renderer/services/class.service";
 import { Button, Input, Form, Alert, Tooltip } from "antd";
+import dayjs from "dayjs";
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { Helmet } from "react-helmet";
-
-const initialList = [
-  {
-    id: "1",
-    name: "Khóa 44",
-    description: "",
-  },
-  {
-    id: "2",
-    name: "Khóa 45",
-    description: "",
-  },
-];
+import { v4 as uuidv4 } from "uuid";
 
 const ClassManagement = () => {
-  const [listClass, setListClass] = useState(initialList);
+  const [dataClasses, setDataClasses] = useState<Class[]>([]);
   const [errors, setErrors] = useState({});
+  const { listClasses, isPending, isUpdating, isError } = useClass();
 
   const validate = useCallback(() => {
     const nameCount = {};
     const newErrors = {};
 
-    listClass.forEach((item) => {
+    dataClasses.forEach((item) => {
       if (!item.name) {
         newErrors[item.id] = "Tên lớp không được để trống";
       }
@@ -40,7 +41,7 @@ const ClassManagement = () => {
       }
     });
 
-    listClass.forEach((item) => {
+    dataClasses.forEach((item) => {
       if (nameCount[item.name] > 1) {
         newErrors[item.id] = "Tên lớp bị trùng";
       }
@@ -48,28 +49,85 @@ const ClassManagement = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [listClass]);
+  }, [dataClasses]);
 
   useEffect(() => {
     validate();
-  }, [listClass, validate]);
+  }, [listClasses, validate]);
 
-  const handleInputChange = useCallback((id, field, value) => {
-    setListClass((prevList) =>
-      prevList.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
-    );
-  }, []);
+  const handleInputChange = useCallback(
+    (id: string, field: string, value: string) => {
+      setDataClasses((prevList) =>
+        prevList.map((item) =>
+          item.id === id ? { ...item, [field]: value } : item
+        )
+      );
+    },
+    []
+  );
 
   const handleAddClass = () => {
-    const newId = (listClass.length + 1).toString();
-    setListClass([...listClass, { id: newId, name: "", description: "" }]);
+    const newId = uuidv4();
+    const newClass = { id: newId, name: "", description: "", isNew: true };
+    setDataClasses([...dataClasses, newClass]);
   };
 
-  const handleDeleteClass = (id) => {
-    setListClass((prevList) => prevList.filter((item) => item.id !== id));
+  const handleDeleteClass = (id: string) => {
+    setDataClasses((prevList) => prevList.filter((item) => item.id !== id));
   };
+
+  const handleSave = useCallback(() => {
+    const newData = {
+      classes: dataClasses.map((item) => {
+        return {
+          id: item.isNew ? undefined : item.id,
+          name: item.name === "" ? null : item.name.trim(),
+          description:
+            !item.description || item.description === ""
+              ? null
+              : item.description.trim(),
+        };
+      }),
+    };
+
+    showAlertConfirm({
+      title: "Xác nhận lưu",
+      html: "Bạn có chắc chắn muốn cập nhật danh sách lớp học? <br/><br/><span class='font-bold text-red-700'>Lưu ý: Thao tác này không thể khôi phục</span>",
+      icon: "question",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        updatedClasses(newData)
+          .then(() => {
+            showAlert(
+              "Thành công",
+              "Danh sách lớp học đã được cập nhật",
+              "success"
+            );
+          })
+          .catch((err) => {
+            showAlertError(err);
+          });
+      }
+    });
+  }, [dataClasses]);
+
+  useEffect(() => {
+    showLoading(isUpdating);
+  }, [isUpdating]);
+
+  useEffect(() => {
+    if (listClasses) {
+      setDataClasses(listClasses.list);
+    }
+  }, [listClasses]);
+
+  if (isPending) {
+    return <Loader />;
+  }
+
+  if (isError) {
+    return <Error />;
+  }
 
   return (
     <Fragment>
@@ -85,7 +143,7 @@ const ClassManagement = () => {
         <div className="flex gap-x-4 justify-between items-center my-4 mb-4">
           <div>
             Có tổng cộng{" "}
-            <span className="font-bold text-red-600">{listClass.length}</span>{" "}
+            <span className="font-bold text-red-600">{dataClasses.length}</span>{" "}
             lớp
           </div>
           <div className="flex items-center gap-x-3">
@@ -94,8 +152,13 @@ const ClassManagement = () => {
             </Button>
             <Button
               type="primary"
-              className="bg-green-700 hover:!bg-green-600"
-              onClick={() => alert("Saving logic here!")}
+              className={
+                Object.keys(errors).length > 0
+                  ? ""
+                  : "bg-green-700 hover:!bg-green-600"
+              }
+              onClick={handleSave}
+              disabled={Object.keys(errors).length > 0}
             >
               <SaveOutlined /> Lưu
             </Button>
@@ -103,12 +166,30 @@ const ClassManagement = () => {
         </div>
 
         <div className="pb-4">
-          {listClass.map((item, index) => (
+          {dataClasses.map((item, index) => (
             <div className="p-4 mb-4 border border-gray-300" key={item.id}>
-              <div className="font-bold mb-4 text-[1.3rem] text-blue-700">
-                Lớp {index + 1}:{" "}
-                <span className="font-bold text-red-700">{item.name}</span>
+              <div className="mb-4 flex items-center justify-between">
+                <div className="font-bold text-[1.3rem]">
+                  Lớp {index + 1}:{" "}
+                  <span className="font-bold text-red-700">{item.name}</span>
+                </div>
+
+                {!item.isNew && (
+                  <div className="flex items-center gap-x-4">
+                    <div>
+                      Ngày tạo:{" "}
+                      <span className="font-bold">
+                        {dayjs(item.createdAt).format("DD/MM/YYYY")}
+                      </span>
+                    </div>
+                    <div>
+                      Số lượng học viên:{" "}
+                      <span className="font-bold">{item.userCount}</span>
+                    </div>
+                  </div>
+                )}
               </div>
+
               <Form.Item
                 validateStatus={errors[item.id] ? "error" : ""}
                 label="Tên lớp"
@@ -143,7 +224,11 @@ const ClassManagement = () => {
 
               <div className="flex justify-end items-center gap-x-4">
                 <div className="mt-4 cursor-pointer">
-                  <Tooltip title={"Khi xóa lớp học sẽ xóa các video và học viên liên quan đến lớp"}>
+                  <Tooltip
+                    title={
+                      "Khi xóa lớp học sẽ xóa các video và học viên liên quan đến lớp"
+                    }
+                  >
                     <QuestionCircleOutlined />
                   </Tooltip>
                 </div>

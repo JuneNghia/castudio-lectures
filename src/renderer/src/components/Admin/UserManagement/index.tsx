@@ -13,8 +13,10 @@ import {
 } from "antd";
 import { useUser } from "@renderer/hooks/useUser";
 import { User } from "@renderer/interfaces/user.interface";
-import { isPending } from "@reduxjs/toolkit";
 import { Class } from "@renderer/interfaces/class.interface";
+import { useClass } from "@renderer/hooks/useClass";
+import Loader from "@renderer/components/Loader";
+import Error from "@renderer/components/Error";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -44,17 +46,26 @@ const UserManagement = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [dataUsers, setDataUsers] = useState<User[]>([]);
   const [isActive, setIsActive] = useState<string>("0");
+  const {
+    listClasses,
+    isPending: isPendingClass,
+    isError: isErrorClass,
+  } = useClass();
 
   const {
     listUsers,
     isPending,
-  }: { listUsers: { list: User[]; total: number }; isPending: boolean } =
-    useUser({
-      page: currentPage,
-      size: pageSize,
-      search: searchText,
-      isActive: isActive === "0" ? undefined : isActive === "1" ? true : false,
-    });
+    isError,
+  }: {
+    listUsers: { list: User[]; total: number };
+    isPending: boolean;
+    isError: boolean;
+  } = useUser({
+    page: currentPage,
+    size: pageSize,
+    search: searchText,
+    isActive: isActive === "0" ? undefined : isActive === "1" ? true : false,
+  });
 
   // Xử lý tìm kiếm
   const handleSearch = (value) => {
@@ -119,6 +130,20 @@ const UserManagement = () => {
       setDataUsers(listUsers.list);
     }
   }, [listUsers]);
+
+  useEffect(() => {
+    if (listClasses) {
+      setClasses(listClasses.list);
+    }
+  }, [listClasses]);
+
+  if (isPending || isPendingClass) {
+    return <Loader />;
+  }
+
+  if (isError || isErrorClass) {
+    return <Error />;
+  }
 
   return (
     <div>

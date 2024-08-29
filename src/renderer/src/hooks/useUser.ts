@@ -11,7 +11,11 @@ export const useUser = (params: QuerySearch) => {
     params.isActive,
   ];
 
-  const { data: listUsers, isPending } = useQuery({
+  const {
+    data: listUsers,
+    isPending,
+    isError,
+  } = useQuery({
     queryKey: queryKey,
     queryFn: () => fetchedUsers(params),
   });
@@ -19,5 +23,6 @@ export const useUser = (params: QuerySearch) => {
   return {
     listUsers,
     isPending,
+    isError,
   };
 };

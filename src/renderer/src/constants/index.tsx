@@ -4,6 +4,8 @@ import {
   VideoCameraOutlined,
 } from "@ant-design/icons";
 
+export const primaryColor = "#1677fe"
+
 export const listAdminMenu = [
   {
     name: "Quản lý lớp học",

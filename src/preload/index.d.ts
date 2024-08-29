@@ -10,6 +10,7 @@ declare global {
       saveToken: (token: string) => void;
       deleteToken: () => boolean;
       resetApp: () => void
+      getVersion: () => Promise;
     };
   }
 }

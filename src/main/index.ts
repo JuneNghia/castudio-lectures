@@ -78,6 +78,15 @@ app.whenReady().then(() => {
     app.exit();
   });
 
+  ipcMain.handle("get-version", () => {
+    const version = app.getVersion();
+
+    if (version) {
+      return version;
+    }
+    return null;
+  });
+
   ipcMain.handle("read-token", async () => {
     if (fs.existsSync(tokenFilePath)) {
       const data = fs.readFileSync(tokenFilePath).toString();

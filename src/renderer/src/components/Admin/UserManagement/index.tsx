@@ -19,7 +19,6 @@ import { useUser } from "@renderer/hooks/useUser";
 import { User } from "@renderer/interfaces/user.interface";
 import { Class } from "@renderer/interfaces/class.interface";
 import { useClass } from "@renderer/hooks/useClass";
-import Loader from "@renderer/components/Loader";
 import Error from "@renderer/components/Error";
 import notify from "@renderer/common/function/notify";
 import showLoading from "@renderer/common/function/showLoading";
@@ -31,7 +30,6 @@ import {
   showAlertConfirm,
   showAlertError,
 } from "@renderer/common/function/swalAlert";
-import useAuth from "@renderer/hooks/useAuth";
 import { RoleEnum } from "@renderer/common/enum";
 
 const { Search } = Input;
@@ -86,7 +84,6 @@ const showTotal: PaginationProps["showTotal"] = (total) =>
 
 const UserManagement = memo(() => {
   const [form] = Form.useForm();
-  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -192,8 +189,6 @@ const UserManagement = memo(() => {
   const handleSaveUser = useCallback(
     (user: User) => {
       const changedValues = getChangedValues(user, selectedUser);
-
-      console.log(changedValues);
 
       if (Object.values(changedValues).length === 0) {
         notify("info", "Không có dữ liệu thay đổi");
@@ -348,6 +343,7 @@ const UserManagement = memo(() => {
           placeholder="Tìm kiếm theo tên, email hoặc địa chỉ MAC"
           onSearch={handleSearch}
           style={{ marginBottom: 16 }}
+          allowClear
         />
 
         <Table
@@ -356,6 +352,7 @@ const UserManagement = memo(() => {
           loading={isPending}
           pagination={false}
           rowKey="id"
+          sticky
         />
 
         <Pagination
@@ -458,7 +455,7 @@ const UserManagement = memo(() => {
             valuePropName="checked"
             label="Trạng thái tài khoản"
             name="isActive"
-            hidden={user?.role === RoleEnum.ADMIN}
+            hidden={selectedUser?.role === RoleEnum.ADMIN}
           >
             <CustomSwitch
               checkedChildren="Đang hoạt động"
@@ -470,13 +467,13 @@ const UserManagement = memo(() => {
             <div className={`flex justify-between`}>
               <Tooltip
                 title={
-                  user?.role === RoleEnum.ADMIN
+                  selectedUser?.role === RoleEnum.ADMIN
                     ? "Không thể xóa tài khoản ADMIN"
                     : undefined
                 }
               >
                 <Button
-                  disabled={user?.role === RoleEnum.ADMIN}
+                  disabled={selectedUser?.role === RoleEnum.ADMIN}
                   onClick={handleDeleteUser}
                   type="primary"
                   danger

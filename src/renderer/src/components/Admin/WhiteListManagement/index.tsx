@@ -12,7 +12,6 @@ import {
 } from "antd";
 import { Class } from "@renderer/interfaces/class.interface";
 import { useClass } from "@renderer/hooks/useClass";
-import Loader from "@renderer/components/Loader";
 import Error from "@renderer/components/Error";
 
 import { useWhiteList } from "@renderer/hooks/useWhiteList";
@@ -221,6 +220,7 @@ const WhiteListManagement = memo(() => {
           placeholder="Tìm kiếm theo địa chỉ email"
           onSearch={handleSearch}
           style={{ marginBottom: 16 }}
+          allowClear
         />
 
         <Table
@@ -229,6 +229,7 @@ const WhiteListManagement = memo(() => {
           loading={isPending}
           pagination={false}
           rowKey="id"
+          sticky
         />
 
         <Pagination

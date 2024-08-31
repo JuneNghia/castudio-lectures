@@ -27,7 +27,7 @@ export interface JWTContextType {
   isInitialised: boolean;
   isLoggedIn: boolean;
   user: User | null;
-  signIn: (email: string, password: string, mac: string) => Promise<void>;
+  signIn: (email: string, password: string, mac: string) => Promise<boolean>;
   signOut: () => void;
 }
 
@@ -35,7 +35,7 @@ const initialState = {
   isLoggedIn: false,
   isInitialised: false,
   user: null,
-  signIn: async () => console.log(),
+  signIn: async () => false,
   signOut: () => console.log(),
 };
 
@@ -85,7 +85,11 @@ export const JWTProvider = ({ children }: { children: ReactNode }) => {
           user: user,
         },
       });
+
+      return true;
     }
+
+    return false;
   };
 
   const signOut = () => {

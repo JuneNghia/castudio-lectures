@@ -15,6 +15,7 @@ export const useVideo = (params: Params) => {
     data: listVideos,
     isPending,
     isError,
+    refetch,
   } = useQuery({
     queryKey,
     queryFn: () => fetchedVideos(params),
@@ -24,7 +25,6 @@ export const useVideo = (params: Params) => {
     useMutation({
       mutationFn: ({ classId, data }: { classId: string; data: any }) =>
         updatedVideosByClass(classId, data),
-      
     });
 
   return {
@@ -33,5 +33,6 @@ export const useVideo = (params: Params) => {
     isPending,
     isUpdating,
     isError,
+    refetch,
   };
 };

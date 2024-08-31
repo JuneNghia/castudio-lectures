@@ -4,5 +4,6 @@ export interface Class extends GeneralInfo {
   name: string;
   description: string | null;
   userCount?: number;
+  videoCount?: number;
   isNew?: boolean;
 }

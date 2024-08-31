@@ -30,7 +30,7 @@ const AdminPage = () => {
                   },
                 }}
                 onClick={() => handleClick(menu.url)}
-                className="border border-blue-700 min-h-[200px] hover:bg-blue-200 cursor-pointer"
+                className="border border-blue-700 min-h-[220px] hover:bg-blue-200 cursor-pointer"
                 title={
                   <div>
                     {menu.icon}
@@ -38,7 +38,7 @@ const AdminPage = () => {
                   </div>
                 }
               >
-                {menu.description}
+                <span>{menu.description}</span>
               </Card>
             </List.Item>
           )}

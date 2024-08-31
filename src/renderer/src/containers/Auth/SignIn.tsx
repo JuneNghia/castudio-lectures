@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import useAuth from "@renderer/hooks/useAuth";
 import notify from "@renderer/common/function/notify";
+import showLoading from "@renderer/common/function/showLoading";
 
 type FieldType = {
   password: string;
@@ -21,7 +22,7 @@ const SignIn = () => {
     auth
       .signIn(values.email, values.password, values.macAddress)
       .then(() => {
-        notify("success", "Đăng nhập thành công");
+        showLoading(true);
 
         setTimeout(() => {
           window.electronAPI.resetApp();
@@ -32,11 +33,11 @@ const SignIn = () => {
       });
   };
 
-  const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
-    errorInfo
-  ) => {
-    console.log("Failed:", errorInfo);
-  };
+  // const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
+  //   errorInfo
+  // ) => {
+  //   console.log("Failed:", errorInfo);
+  // };
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -58,7 +59,7 @@ const SignIn = () => {
           remember: true,
         }}
         onFinish={onFinish}
-        onFinishFailed={onFinishFailed}
+        // onFinishFailed={onFinishFailed}
         autoComplete="off"
       >
         <Form.Item<FieldType>

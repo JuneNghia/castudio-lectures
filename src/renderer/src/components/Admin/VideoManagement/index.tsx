@@ -1,4 +1,4 @@
-import { PlusOutlined, SaveOutlined } from "@ant-design/icons";
+import { DeleteOutlined, PlusOutlined, SaveOutlined } from "@ant-design/icons";
 import showLoading from "@renderer/common/function/showLoading";
 import {
   showAlert,
@@ -22,15 +22,22 @@ const VideoManagement = () => {
   const [dataVideos, setDataVideos] = useState<Video[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>("undefined");
   const [dataClasses, setDataClasses] = useState<Class[]>([]);
-  const { listVideos, isPending, isError, isUpdating, updateVideosByClass } =
-    useVideo({
-      classId: selectedClassId === "undefined" ? undefined : selectedClassId,
-    });
+  const {
+    listVideos,
+    isPending,
+    isError,
+    isUpdating,
+    updateVideosByClass,
+    refetch,
+  } = useVideo({
+    classId: selectedClassId === "undefined" ? undefined : selectedClassId,
+  });
   const {
     listClasses,
     isPending: isPendingClass,
     isError: isErrorClass,
   } = useClass();
+  const isReadOnly = selectedClassId === "undefined";
 
   const [errors, setErrors] = useState<any>({});
 
@@ -72,56 +79,66 @@ const VideoManagement = () => {
     );
   };
 
+  const handleDeleteVideo = useCallback((id: string) => {
+    setDataVideos((prevList) => prevList.filter((item) => item.id !== id));
+  }, []);
+
   const validate = useCallback(() => {
-    const nameCount: { [key: string]: number } = {};
-    const urlCount: { [key: string]: number } = {};
-    const newErrors: { [key: string]: { name?: string; url?: string } } = {};
+    if (selectedClassId !== "undefined") {
+      const nameCount: { [key: string]: number } = {};
+      const urlCount: { [key: string]: number } = {};
+      const newErrors: { [key: string]: { name?: string; url?: string } } = {};
 
-    dataVideos.forEach((item) => {
-      if (!item.name) {
-        newErrors[item.id] = {
-          ...newErrors[item.id],
-          name: "Tên video không được để trống",
-        };
-      }
+      dataVideos.forEach((item) => {
+        if (!item.name) {
+          newErrors[item.id] = {
+            ...newErrors[item.id],
+            name: "Tên video không được để trống",
+          };
+        }
 
-      if (item.name) {
-        nameCount[item.name] = (nameCount[item.name] || 0) + 1;
-      }
+        if (item.name) {
+          nameCount[item.name] = (nameCount[item.name] || 0) + 1;
+        }
 
-      if (!item.url) {
-        newErrors[item.id] = {
-          ...newErrors[item.id],
-          url: "URL không được để trống",
-        };
-      }
+        if (!item.url) {
+          newErrors[item.id] = {
+            ...newErrors[item.id],
+            url: "URL không được để trống",
+          };
+        }
 
-      if (item.url) {
-        urlCount[item.url] = (urlCount[item.url] || 0) + 1;
-      }
-    });
+        if (item.url) {
+          urlCount[item.url] = (urlCount[item.url] || 0) + 1;
+        }
+      });
 
-    dataVideos.forEach((item) => {
-      if (nameCount[item.name] > 1) {
-        newErrors[item.id] = {
-          ...newErrors[item.id],
-          name: "Tên video bị trùng",
-        };
-      }
-    });
+      dataVideos.forEach((item) => {
+        if (nameCount[item.name] > 1) {
+          newErrors[item.id] = {
+            ...newErrors[item.id],
+            name: "Tên video bị trùng",
+          };
+        }
+      });
 
-    dataVideos.forEach((item) => {
-      if (urlCount[item.url] > 1) {
-        newErrors[item.id] = {
-          ...newErrors[item.id],
-          url: "URL video bị trùng",
-        };
-      }
-    });
+      dataVideos.forEach((item) => {
+        if (urlCount[item.url] > 1) {
+          newErrors[item.id] = {
+            ...newErrors[item.id],
+            url: "URL video bị trùng",
+          };
+        }
+      });
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  }, [dataVideos]);
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    } else {
+      setErrors({});
+
+      return;
+    }
+  }, [dataVideos, selectedClassId]);
 
   const handleSave = useCallback(() => {
     const newData = {
@@ -148,7 +165,9 @@ const VideoManagement = () => {
           classId: selectedClassId,
           data: newData,
         })
-          .then(() => {
+          .then(async () => {
+            await refetch();
+
             showAlert(
               "Thành công",
               "Danh sách Video đã được cập nhật",
@@ -163,10 +182,8 @@ const VideoManagement = () => {
   }, [dataClasses, dataVideos, selectedClassId]);
 
   useEffect(() => {
-    if (selectedClassId !== "undefined") {
-      validate();
-    }
-  }, [selectedClassId, dataVideos, validate]);
+    validate();
+  }, [validate]);
 
   useEffect(() => {
     showLoading(isUpdating);
@@ -186,26 +203,39 @@ const VideoManagement = () => {
         <title>QUẢN LÝ VIDEO</title>
       </Helmet>
 
-      <div className="mt-4">
+      <div className="mt-4 flex items-center gap-x-8">
         <BackBtn />
+
+        {isReadOnly && (
+          <div className="font-bold text-red-500">
+            Để chỉnh sửa, vui lòng chọn lớp học trước
+          </div>
+        )}
       </div>
 
       <div className="mt-4 flex justify-between items-center">
-        <div className="flex items-center gap-x-4">
-          <span>Chọn lớp học:</span>
-          <Select
-            placeholder="Tất cả"
-            className="min-w-[200px]"
-            onChange={(value) => setSelectedClassId(value)}
-            value={selectedClassId}
-          >
-            <Select.Option value={"undefined"}>Tất cả</Select.Option>
-            {dataClasses.map((item) => (
-              <Select.Option key={item.id} value={item.id}>
-                {item.name}
-              </Select.Option>
-            ))}
-          </Select>
+        <div className="flex items-center gap-x-4 w-full">
+          <div className="flex items-center gap-x-2">
+            <span>Chọn lớp học:</span>
+            <Select
+              placeholder="Tất cả"
+              className="min-w-[200px]"
+              onChange={(value) => setSelectedClassId(value)}
+              value={selectedClassId}
+            >
+              <Select.Option value={"undefined"}>Tất cả</Select.Option>
+              {dataClasses.map((item) => (
+                <Select.Option key={item.id} value={item.id}>
+                  {item.name}
+                </Select.Option>
+              ))}
+            </Select>
+          </div>
+
+          <div>
+            Tổng số Video:{" "}
+            <span className="font-bold">{dataVideos.length}</span>
+          </div>
         </div>
 
         {selectedClassId !== "undefined" && (
@@ -239,8 +269,19 @@ const VideoManagement = () => {
                 <Card
                   className="border border-blue-700 min-h-[200px]"
                   title={
-                    <div className={video.name ? "font-bold" : "italic"}>
-                      {video.name || "Chưa đặt tên Video"}
+                    <div className="flex items-center gap-x-2">
+                      {!isReadOnly && (
+                        <Button
+                          onClick={() => handleDeleteVideo(video.id)}
+                          danger
+                          size="small"
+                        >
+                          <DeleteOutlined />
+                        </Button>
+                      )}
+                      <div className={video.name ? "font-bold" : "italic"}>
+                        {video.name || "Chưa đặt tên Video"}
+                      </div>
                     </div>
                   }
                 >
@@ -251,6 +292,7 @@ const VideoManagement = () => {
                     }
                     onBlur={validate}
                     placeholder="Nhập tên"
+                    readOnly={isReadOnly}
                   />
 
                   {errors[video.id]?.name && (
@@ -264,7 +306,8 @@ const VideoManagement = () => {
                     onChange={(e) =>
                       handleInputChange(video.id, "description", e.target.value)
                     }
-                    placeholder="Nhập mô tả"
+                    placeholder={isReadOnly ? "Không có mô tả" : "Nhập mô tả"}
+                    readOnly={isReadOnly}
                   />
                   <Input
                     value={video.url}
@@ -273,6 +316,7 @@ const VideoManagement = () => {
                     }
                     onBlur={validate}
                     placeholder="Nhập URL"
+                    readOnly={isReadOnly}
                   />
                   {errors[video.id]?.url && (
                     <span className="text-red-500">{errors[video.id].url}</span>
@@ -281,10 +325,18 @@ const VideoManagement = () => {
                   {!video.isNew && (
                     <div className="mt-4">
                       <Typography.Text>
-                        Thời gian tạo:{" "}
-                        <span className="font-bold">
-                          {dayjs(video.createdAt).format("DD/MM/YYYY")}
-                        </span>
+                        <div>
+                          Thời gian tạo:{" "}
+                          <span className="font-bold">
+                            {dayjs(video.createdAt).format("HH:mm DD/MM/YYYY")}
+                          </span>
+                        </div>
+                        <div>
+                          Cập nhật lần cuối:{" "}
+                          <span className="font-bold">
+                            {dayjs(video.updatedAt).format("HH:mm DD/MM/YYYY")}
+                          </span>
+                        </div>
                       </Typography.Text>
                     </div>
                   )}

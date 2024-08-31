@@ -1,7 +1,10 @@
-import { SyncOutlined, UserOutlined } from "@ant-design/icons";
+import { LogoutOutlined, SyncOutlined, UserOutlined } from "@ant-design/icons";
 import logoImg from "@renderer/assets/logo.png";
+import { RoleEnum } from "@renderer/common/enum";
+import notify from "@renderer/common/function/notify";
+import { showAlertConfirm } from "@renderer/common/function/swalAlert";
 import useAuth from "@renderer/hooks/useAuth";
-import { Avatar, Button, Popover, Tooltip } from "antd";
+import { Avatar, Button, Divider, Popover, Tag, Tooltip } from "antd";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -9,10 +12,21 @@ const TopBar = () => {
   const [version, setVersion] = useState(null);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  const handleSignOut = useCallback(() => {
-    signOut();
 
-    navigate("/sign-in");
+  const handleSignOut = useCallback(() => {
+    showAlertConfirm({
+      title: "Đăng xuất",
+      html: "Bạn có chắc chắn muốn đăng xuất?",
+      icon: "question",
+      confirmButtonText: "Đăng xuất",
+      confirmButtonColor: "red",
+    }).then((confirm) => {
+      if (confirm.isConfirmed) {
+        signOut();
+        notify("success", "Đăng xuất thành công");
+        navigate("/sign-in");
+      }
+    });
   }, []);
 
   const handleResetApp = useCallback(() => {
@@ -47,16 +61,25 @@ const TopBar = () => {
           </Button>
         </Tooltip>
         <Popover
-          title={user?.fullName}
+          title={
+            <>
+              <div className="font-bold relative">{user?.name}</div>
+              <div>{user?.email}</div>
+              <Divider className="mb-0 mt-1" />
+            </>
+          }
           className="cursor-pointer"
           content={
-            <div>
-              <div
-                className="text-blue-700 cursor-pointer hover:underline"
-                onClick={handleSignOut}
-              >
-                Đăng xuất
+            <div className="flex justify-between items-center">
+              <div>
+                <Tag color={user?.role === RoleEnum.ADMIN ? "red" : "green"}>
+                  {user?.role}
+                </Tag>
               </div>
+              <Button onClick={handleSignOut}>
+                <LogoutOutlined />
+                Đăng xuất
+              </Button>
             </div>
           }
           trigger={"click"}

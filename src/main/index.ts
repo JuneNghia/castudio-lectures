@@ -13,8 +13,8 @@ let checkScreenRecorderInterval: NodeJS.Timeout | null = null;
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 1368,
-    height: 670,
+    width: 1158,
+    height: 711,
     show: false,
     autoHideMenuBar: true,
     center: true,

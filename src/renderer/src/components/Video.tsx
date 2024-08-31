@@ -57,7 +57,7 @@ const Video = memo(
             style={{ width: "640px", height: "480px", position: "relative" }}
           >
             <iframe
-              src={`https://drive.google.com/file/d/${data.id}/preview`}
+              src={`https://drive.google.com/file/d/${data.url}/preview`}
               width="640"
               height="480"
               seamless={undefined}

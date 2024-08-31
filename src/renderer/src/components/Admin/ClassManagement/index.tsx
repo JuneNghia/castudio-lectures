@@ -25,7 +25,7 @@ import { v4 as uuidv4 } from "uuid";
 const ClassManagement = () => {
   const [dataClasses, setDataClasses] = useState<Class[]>([]);
   const [errors, setErrors] = useState({});
-  const { listClasses, isPending, isUpdating, isError } = useClass();
+  const { listClasses, isPending, isError, refetch } = useClass();
 
   const validate = useCallback(() => {
     const nameCount = {};
@@ -72,9 +72,9 @@ const ClassManagement = () => {
     setDataClasses([...dataClasses, newClass]);
   };
 
-  const handleDeleteClass = (id: string) => {
+  const handleDeleteClass = useCallback((id: string) => {
     setDataClasses((prevList) => prevList.filter((item) => item.id !== id));
-  };
+  }, []);
 
   const handleSave = useCallback(() => {
     const newData = {
@@ -96,8 +96,11 @@ const ClassManagement = () => {
       icon: "question",
     }).then((result) => {
       if (result.isConfirmed) {
+        showLoading(true);
         updatedClasses(newData)
-          .then(() => {
+          .then(async () => {
+            await refetch();
+
             showAlert(
               "Thành công",
               "Danh sách lớp học đã được cập nhật",
@@ -105,15 +108,12 @@ const ClassManagement = () => {
             );
           })
           .catch((err) => {
+            showLoading(false);
             showAlertError(err);
           });
       }
     });
   }, [dataClasses]);
-
-  useEffect(() => {
-    showLoading(isUpdating);
-  }, [isUpdating]);
 
   useEffect(() => {
     if (listClasses) {
@@ -182,9 +182,15 @@ const ClassManagement = () => {
                         {dayjs(item.createdAt).format("DD/MM/YYYY")}
                       </span>
                     </div>
-                    <div>
-                      Số lượng học viên:{" "}
-                      <span className="font-bold">{item.userCount}</span>
+                    <div className="flex items-center gap-x-4">
+                      <div>
+                        Số lượng học viên:{" "}
+                        <span className="font-bold">{item.userCount}</span>
+                      </div>
+                      <div>
+                        Số lượng Video:{" "}
+                        <span className="font-bold">{item.videoCount}</span>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -226,7 +232,7 @@ const ClassManagement = () => {
                 <div className="mt-4 cursor-pointer">
                   <Tooltip
                     title={
-                      "Khi xóa lớp học sẽ xóa các video và học viên liên quan đến lớp"
+                      "Khi xóa lớp học sẽ xóa các video, danh sách trắng và học viên liên quan đến lớp"
                     }
                   >
                     <QuestionCircleOutlined />

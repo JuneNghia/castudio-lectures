@@ -27,6 +27,8 @@ export const showAlert = async (
     confirmButtonColor: primaryColor,
     focusConfirm: true,
     allowEnterKey: true,
+    allowEscapeKey: false,
+    allowOutsideClick: false,
   });
 };
 
@@ -40,5 +42,7 @@ export const showAlertError = async (err: any) => {
     confirmButtonColor: primaryColor,
     focusConfirm: true,
     allowEnterKey: true,
+    allowEscapeKey: false,
+    allowOutsideClick: false
   });
 };

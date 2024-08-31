@@ -12,9 +12,9 @@ const AuthService = {
       password,
       mac,
     }),
-  singUp: (fullName: string, email: string, password: string, mac: string) =>
+  signUp: (name: string, email: string, password: string, mac: string) =>
     axiosConfig.post(AUTH.SIGN_UP, {
-      fullName,
+      name,
       email,
       password,
       mac,

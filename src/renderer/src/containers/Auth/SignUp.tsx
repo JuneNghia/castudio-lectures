@@ -10,7 +10,7 @@ type FieldType = {
   email: string;
   repassword: string;
   macAddress: string;
-  fullName: string;
+  name: string;
 };
 
 const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (errorInfo) => {
@@ -23,8 +23,8 @@ const SignUp = () => {
   const navigate = useNavigate();
 
   const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
-    AuthService.singUp(
-      values.fullName,
+    AuthService.signUp(
+      values.name,
       values.email,
       values.password,
       values.macAddress
@@ -68,7 +68,7 @@ const SignUp = () => {
 
         <Form.Item<FieldType>
           label="Họ và tên"
-          name="fullName"
+          name="name"
           rules={[
             { required: true, message: "Vui lòng nhập họ và tên" },
             { max: 60, message: "Họ và tên không được quá 60 ký tự" },

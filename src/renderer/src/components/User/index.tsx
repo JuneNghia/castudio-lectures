@@ -4,9 +4,11 @@ import { Helmet } from "react-helmet";
 import Video from "../Video";
 import notify from "@renderer/common/function/notify";
 import { Video as VideoType } from "@renderer/interfaces/video.interface";
+import useAuth from "@renderer/hooks/useAuth";
 
 const UserPage = () => {
   const [dataVideo, setDataVideo] = useState<VideoType | null>(null);
+  const { user } = useAuth();
 
   const handleClick = useCallback((data: VideoType | null) => {
     if (data) {
@@ -26,26 +28,14 @@ const UserPage = () => {
         <Video data={dataVideo} setData={setDataVideo} />
       ) : (
         <div className="p-4">
-          <div className="mb-4">Bạn hiện đang được xem 4 video</div>
+          <div className="mb-4">
+            Bạn hiện đang được xem{" "}
+            <span className="font-bold">{user?.videos.length}</span> video
+          </div>
 
           <List
             grid={{ gutter: 16, column: 3 }}
-            dataSource={[
-              {
-                url: "1-OrsePUAkO6VkuTHVCGJ13F1ytpwIu7c",
-                name: "Buổi 1",
-                description: "Dạy về khái niệm cơ bản Revit",
-                id: "1-OrsePUAkO6VkuTHVCGJ13F1ytpwIu7c",
-                class: null,
-              },
-              {
-                name: "Buổi 2",
-                url: "1obNzVS7tEyKt37Tfl_XeQkTuqtCkM6LW",
-                description: "Các phiên bản revit",
-                id: "1obNzVS7tEyKt37Tfl_XeQkTuqtCkM6LW",
-                class: null,
-              },
-            ]}
+            dataSource={user?.videos}
             renderItem={(video, index) => (
               <List.Item>
                 <Card
@@ -64,7 +54,9 @@ const UserPage = () => {
                     </div>
                   }
                 >
-                  {video.description}
+                  {video.description || (
+                    <span className="italic">Không có thông tin mô tả</span>
+                  )}
                 </Card>
               </List.Item>
             )}

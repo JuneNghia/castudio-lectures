@@ -1,5 +1,6 @@
 import BackBtn from "@renderer/components/Button/BackBtn";
-import { useEffect, useState } from "react";
+import styled from "styled-components";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet";
 import {
   Table,
@@ -11,6 +12,8 @@ import {
   Select,
   Tag,
   PaginationProps,
+  Tooltip,
+  Switch,
 } from "antd";
 import { useUser } from "@renderer/hooks/useUser";
 import { User } from "@renderer/interfaces/user.interface";
@@ -18,6 +21,18 @@ import { Class } from "@renderer/interfaces/class.interface";
 import { useClass } from "@renderer/hooks/useClass";
 import Loader from "@renderer/components/Loader";
 import Error from "@renderer/components/Error";
+import notify from "@renderer/common/function/notify";
+import showLoading from "@renderer/common/function/showLoading";
+import { useVideo } from "@renderer/hooks/useVideo";
+import { Video } from "electron";
+import { DeleteOutlined, EditOutlined, SaveOutlined } from "@ant-design/icons";
+import {
+  showAlert,
+  showAlertConfirm,
+  showAlertError,
+} from "@renderer/common/function/swalAlert";
+import useAuth from "@renderer/hooks/useAuth";
+import { RoleEnum } from "@renderer/common/enum";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -37,9 +52,41 @@ const options = [
   },
 ];
 
-const showTotal: PaginationProps['showTotal'] = (total) => `Tổng cộng có ${total} người dùng`;
+const CustomSwitch = styled(Switch)`
+  &.ant-switch-checked {
+    background-color: green; /* Màu xanh khi bật */
+  }
 
-const UserManagement = () => {
+  &:not(.ant-switch-checked) {
+    background-color: red; /* Màu đỏ khi tắt */
+  }
+
+  /* Loại bỏ màu hover mặc định */
+  &.ant-switch-checked:hover {
+    background-color: green !important;
+  }
+
+  &:not(.ant-switch-checked):hover {
+    background-color: red; /* Giữ màu đỏ khi hover tắt */
+  }
+`;
+
+const getChangedValues = (values, initialValues) => {
+  const changedValues = {};
+  Object.keys(values).forEach((key) => {
+    if (values[key] !== initialValues[key]) {
+      changedValues[key] = values[key];
+    }
+  });
+  return changedValues;
+};
+
+const showTotal: PaginationProps["showTotal"] = (total) =>
+  `Tổng cộng có ${total} người dùng`;
+
+const UserManagement = memo(() => {
+  const [form] = Form.useForm();
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
@@ -47,23 +94,23 @@ const UserManagement = () => {
   const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [classes, setClasses] = useState<Class[]>([]);
+  const [videos, setVideos] = useState<Video[]>([]);
   const [dataUsers, setDataUsers] = useState<User[]>([]);
   const [isActive, setIsActive] = useState<string>("0");
   const [selectedClassId, setSelectedClassId] = useState<string>("undefined");
-  const {
-    listClasses,
-    isPending: isPendingClass,
-    isError: isErrorClass,
-  } = useClass();
+  const { listClasses, isError: isErrorClass } = useClass();
+  const { listVideos, isError: isErrorVideo } = useVideo({
+    classId: selectedUser?.class?.id,
+  });
 
   const {
     listUsers,
     isPending,
     isError,
-  }: {
-    listUsers: { list: User[]; total: number };
-    isPending: boolean;
-    isError: boolean;
+    fetchUserById,
+    updateUserById,
+    deleteUserById,
+    refetch,
   } = useUser({
     page: currentPage,
     size: pageSize,
@@ -72,63 +119,166 @@ const UserManagement = () => {
     classId: selectedClassId === "undefined" ? undefined : selectedClassId,
   });
 
-  // Xử lý tìm kiếm
-  const handleSearch = (value) => {
+  const handleSearch = useCallback((value) => {
     setSearchText(value);
-    setCurrentPage(1); // Reset lại trang về 1 khi tìm kiếm
-  };
+    setCurrentPage(1);
+  }, []);
 
-  // Xử lý phân trang
-  const handlePageChange = (page, pageSize) => {
+  const handlePageChange = useCallback((page, pageSize) => {
     setCurrentPage(page);
     setPageSize(pageSize);
-  };
+  }, []);
 
-  // Xử lý khi click vào user (mở modal chỉnh sửa)
-  const handleEditUser = (user) => {
-    setSelectedUser(user);
-    setIsModalOpen(true);
-  };
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+    setSelectedUser(undefined);
+  }, []);
 
-  const columns = [
-    {
-      title: "Họ tên",
-      dataIndex: "fullName",
-      key: "fullName",
+  const handleDeleteUser = useCallback(() => {
+    if (selectedUser) {
+      showAlertConfirm({
+        title: "Xác nhận xóa",
+        icon: "warning",
+        confirmButtonText: "Xóa",
+        confirmButtonColor: "red",
+        html: `Bạn có chắc chắn muốn xóa vĩnh viễn người dùng <b>${selectedUser.email}</b>? <br/><br/><span class='font-bold text-red-700'>Lưu ý: Thao tác này không thể khôi phục</span>`,
+      }).then((confirm) => {
+        if (confirm.isConfirmed) {
+          showLoading(true);
+          deleteUserById({
+            id: selectedUser.id,
+          })
+            .then(() => {
+              showAlert(
+                "Thành công",
+                `Người dùng <b>${selectedUser.email}</b> đã được xóa vĩnh viễn`,
+                "success"
+              ).then((confirm) => {
+                if (confirm.isConfirmed) {
+                  handleCloseModal();
+
+                  refetch();
+                }
+              });
+            })
+            .catch((err) => {
+              showAlertError(err);
+            });
+        }
+      });
+    } else {
+      notify("error", "Không lấy được ID người dùng");
+    }
+  }, [selectedUser]);
+
+  const handleEditUser = useCallback((user) => {
+    showLoading(true);
+    fetchUserById({
+      id: user.id,
+    })
+      .then((res: User) => {
+        setSelectedUser(res);
+
+        if (res) {
+          showLoading(false);
+          setIsModalOpen(true);
+        }
+      })
+      .catch(() => {
+        notify("error", "Không thể lấy dữ liệu người dùng");
+      });
+  }, []);
+
+  const handleSaveUser = useCallback(
+    (user: User) => {
+      const changedValues = getChangedValues(user, selectedUser);
+
+      console.log(changedValues);
+
+      if (Object.values(changedValues).length === 0) {
+        notify("info", "Không có dữ liệu thay đổi");
+      } else {
+        if (selectedUser) {
+          showAlertConfirm({
+            title: "Xác nhận cập nhật",
+            icon: "warning",
+            confirmButtonText: "Cập nhật",
+            html: `Bạn có chắc chắn muốn cập nhật người dùng <b>${selectedUser.email}</b>? <br/><br/><span class='font-bold text-red-700'>Lưu ý: Thao tác này không thể khôi phục</span>`,
+          }).then((confirm) => {
+            if (confirm.isConfirmed) {
+              showLoading(true);
+              updateUserById({
+                id: selectedUser.id,
+                data: changedValues,
+              })
+                .then(() => {
+                  showAlert(
+                    "Thành công",
+                    `Người dùng <b>${selectedUser.email}</b> <br/> đã được cập nhật thành công`,
+                    "success"
+                  ).then((confirm) => {
+                    if (confirm.isConfirmed) {
+                      handleCloseModal();
+
+                      refetch();
+                    }
+                  });
+                })
+                .catch((err) => {
+                  showAlertError(err);
+                });
+            }
+          });
+        } else {
+          notify("error", "Không lấy được ID người dùng");
+        }
+      }
     },
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-    },
-    {
-      title: "MAC",
-      dataIndex: "mac",
-      key: "mac",
-    },
-    {
-      title: "Trạng thái",
-      dataIndex: "isActive",
-      key: "isActive",
-      render: (isActive: boolean) => {
-        return (
-          <Tag color={isActive ? "success" : "error"}>
-            {isActive ? "Đang hoạt động" : "Đã bị khóa"}
-          </Tag>
-        );
+    [selectedUser]
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        title: "Họ tên",
+        dataIndex: "name",
+        key: "name",
       },
-    },
-    {
-      title: "Hành động",
-      key: "action",
-      render: (_, user) => (
-        <Button type="primary" onClick={() => handleEditUser(user)}>
-          Sửa
-        </Button>
-      ),
-    },
-  ];
-
+      {
+        title: "Email",
+        dataIndex: "email",
+        key: "email",
+      },
+      {
+        title: "MAC",
+        dataIndex: "mac",
+        key: "mac",
+      },
+      {
+        title: "Trạng thái",
+        dataIndex: "isActive",
+        key: "isActive",
+        render: (isActive: boolean) => {
+          return (
+            <Tag color={isActive ? "success" : "error"}>
+              {isActive ? "Đang hoạt động" : "Đã bị khóa"}
+            </Tag>
+          );
+        },
+      },
+      {
+        title: "Hành động",
+        key: "action",
+        render: (_, user) => (
+          <Button type="primary" onClick={() => handleEditUser(user)}>
+            <EditOutlined />
+            Sửa
+          </Button>
+        ),
+      },
+    ],
+    []
+  );
   useEffect(() => {
     if (listUsers) {
       setTotalUsers(listUsers.total);
@@ -137,16 +287,22 @@ const UserManagement = () => {
   }, [listUsers]);
 
   useEffect(() => {
+    form.setFieldsValue(selectedUser);
+  }, [selectedUser]);
+
+  useEffect(() => {
     if (listClasses) {
       setClasses(listClasses.list);
     }
   }, [listClasses]);
 
-  if (isPending || isPendingClass) {
-    return <Loader />;
-  }
+  useEffect(() => {
+    if (listVideos) {
+      setVideos(listVideos.list);
+    }
+  }, [listVideos]);
 
-  if (isError || isErrorClass) {
+  if (isError || isErrorClass || isErrorVideo) {
     return <Error />;
   }
 
@@ -215,21 +371,32 @@ const UserManagement = () => {
         />
       </div>
 
-      {/* Modal chỉnh sửa thông tin */}
       <Modal
-        title={`Chỉnh sửa thông tin ${selectedUser?.fullName}`}
+        title={
+          <>
+            Chỉnh sửa thông tin{" "}
+            <span className="text-blue-700 font-bold">
+              {selectedUser?.name}
+            </span>
+          </>
+        }
         open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
+        onCancel={handleCloseModal}
         footer={null}
+        maskClosable={false}
+        keyboard={false}
       >
         <Form
+          form={form}
           initialValues={selectedUser}
-          //   onFinish={handleSaveUser}
-          layout="vertical"
+          onFinish={handleSaveUser}
+          layout="horizontal"
+          labelCol={{ offset: 0, span: 8 }}
+          className="mt-6"
         >
           <Form.Item
             label="Họ và tên"
-            name="fullName"
+            name="name"
             rules={[
               { required: true, message: "Họ và tên không được để trống" },
             ]}
@@ -247,14 +414,39 @@ const UserManagement = () => {
             <Input placeholder="Nhập email" />
           </Form.Item>
           <Form.Item
-            label="Lớp học"
-            name="class"
-            rules={[{ required: true, message: "Vui lòng chọn lớp học" }]}
+            label="MAC"
+            name="mac"
+            rules={[{ required: true, message: "MAC không được để trống" }]}
           >
-            <Select placeholder="Chọn lớp học">
+            <Input placeholder="Nhập địa chỉ MAC" />
+          </Form.Item>
+          <Form.Item label="Lớp học" name="classId">
+            <Select placeholder="Chưa có lớp học">
               {classes.map((cls) => (
-                <Option key={cls.id} value={cls.name}>
+                <Option key={cls.id} value={cls.id}>
                   {cls.name}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item label="Video được xem" name="videoIds">
+            <Select
+              filterOption={(input, option) =>
+                option?.props.children
+                  .toLowerCase()
+                  .indexOf(input.toLowerCase()) >= 0 ||
+                option?.props.value
+                  .toLowerCase()
+                  .indexOf(input.toLowerCase()) >= 0
+              }
+              allowClear
+              mode="multiple"
+              placeholder="Chưa có Video"
+            >
+              {videos.map((video) => (
+                <Option key={video.id} value={video.id}>
+                  {video.name}
                 </Option>
               ))}
             </Select>
@@ -262,14 +454,41 @@ const UserManagement = () => {
           <Form.Item label="Mật khẩu mới" name="password">
             <Input.Password placeholder="Nhập mật khẩu mới (nếu muốn thay đổi)" />
           </Form.Item>
+          <Form.Item
+            valuePropName="checked"
+            label="Trạng thái tài khoản"
+            name="isActive"
+            hidden={user?.role === RoleEnum.ADMIN}
+          >
+            <CustomSwitch
+              checkedChildren="Đang hoạt động"
+              unCheckedChildren="Vô hiệu hóa"
+            />
+          </Form.Item>
 
           <Form.Item>
-            <div className="flex justify-between">
+            <div className={`flex justify-between`}>
+              <Tooltip
+                title={
+                  user?.role === RoleEnum.ADMIN
+                    ? "Không thể xóa tài khoản ADMIN"
+                    : undefined
+                }
+              >
+                <Button
+                  disabled={user?.role === RoleEnum.ADMIN}
+                  onClick={handleDeleteUser}
+                  type="primary"
+                  danger
+                >
+                  <DeleteOutlined />
+                  Xóa
+                </Button>
+              </Tooltip>
+
               <Button type="primary" htmlType="submit">
-                Lưu
-              </Button>
-              <Button type="primary" danger>
-                Xóa
+                <SaveOutlined />
+                Cập nhật
               </Button>
             </div>
           </Form.Item>
@@ -277,6 +496,6 @@ const UserManagement = () => {
       </Modal>
     </div>
   );
-};
+});
 
 export default UserManagement;

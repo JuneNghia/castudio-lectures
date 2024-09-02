@@ -67,7 +67,7 @@ const Error = ({
         <title>{dataErr.title.toUpperCase()}</title>
       </Helmet>
       <div
-        className="h-screen w-screen flex justify-center items-center"
+        className="flex justify-center items-center"
         style={{
           minHeight: httpCode === 403 ? "80vh" : height || "80vh",
         }}

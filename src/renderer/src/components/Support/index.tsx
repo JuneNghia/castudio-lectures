@@ -4,7 +4,7 @@ import { Fragment, useCallback } from "react";
 import { Helmet } from "react-helmet";
 import { useNavigate } from "react-router-dom";
 
-const AdminPage = () => {
+const SupportPage = () => {
   const navigate = useNavigate();
 
   const handleClick = useCallback((url: string) => {
@@ -14,13 +14,13 @@ const AdminPage = () => {
   return (
     <Fragment>
       <Helmet>
-        <title>QUẢN TRỊ HỆ THỐNG - ADMIN</title>
+        <title>QUẢN TRỊ HỆ THỐNG - SUPPORT</title>
       </Helmet>
 
       <div className="p-4">
         <List
           grid={{ gutter: 16, column: 3 }}
-          dataSource={listMenu}
+          dataSource={listMenu.filter((menu) => menu.allowSupport)}
           renderItem={(menu) => (
             <List.Item>
               <Card
@@ -48,4 +48,4 @@ const AdminPage = () => {
   );
 };
 
-export default AdminPage;
+export default SupportPage;

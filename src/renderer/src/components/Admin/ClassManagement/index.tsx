@@ -232,7 +232,7 @@ const ClassManagement = () => {
                 <div className="mt-4 cursor-pointer">
                   <Tooltip
                     title={
-                      "Khi xóa lớp học sẽ xóa các video, danh sách trắng và học viên liên quan đến lớp"
+                      `Khi xóa lớp học sẽ xóa các video, danh sách trắng và học viên liên quan đến lớp ${item.name}`
                     }
                   >
                     <QuestionCircleOutlined />

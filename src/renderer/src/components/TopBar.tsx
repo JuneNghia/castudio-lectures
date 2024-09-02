@@ -72,11 +72,19 @@ const TopBar = () => {
           content={
             <div className="flex justify-between items-center">
               <div>
-                <Tag color={user?.role === RoleEnum.ADMIN ? "red" : "green"}>
+                <Tag
+                  color={
+                    user?.role === RoleEnum.ADMIN
+                      ? "red"
+                      : user?.role === RoleEnum.SUPPORT
+                        ? "purple"
+                        : "green"
+                  }
+                >
                   {user?.role}
                 </Tag>
               </div>
-              <Button onClick={handleSignOut}>
+              <Button danger onClick={handleSignOut}>
                 <LogoutOutlined />
                 Đăng xuất
               </Button>

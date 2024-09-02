@@ -7,12 +7,13 @@ import {
 
 export const primaryColor = "#1677fe";
 
-export const listAdminMenu = [
+export const listMenu = [
   {
     name: "Quản lý lớp học",
     description: "Hiển thị danh sách và chỉnh sửa các lớp học. Lưu ý quan trọng: Khi xóa lớp học đồng nghĩa với việc toàn bộ người dùng, video và danh sách trắng của lớp học đó cũng sẽ bị xóa vĩnh viễn.",
     url: "/admin/class",
     icon: <HomeOutlined />,
+    
   },
   {
     name: "Quản lý người dùng",
@@ -20,6 +21,7 @@ export const listAdminMenu = [
       "Hiển thị danh sách, sửa, xóa hoặc khóa tài khoản người dùng. Thay đổi lớp học và chỉ định Video được phép truy cập của người dùng được chọn.",
     url: "/admin/user",
     icon: <TeamOutlined />,
+    allowSupport: true
   },
   {
     name: "Quản lý video",

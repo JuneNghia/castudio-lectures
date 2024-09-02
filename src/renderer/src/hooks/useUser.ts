@@ -1,5 +1,6 @@
 import { QuerySearch } from "@renderer/common/interface/search.interface";
 import {
+  createdSupport,
   deletedUserById,
   fetchedUserById,
   fetchedUsers,
@@ -40,6 +41,10 @@ export const useUser = (params: Params) => {
       updatedUserById(id, data),
   });
 
+  const { mutateAsync: createSupport } = useMutation({
+    mutationFn: ({ data }: { data: any }) => createdSupport(data),
+  });
+
   const { mutateAsync: deleteUserById } = useMutation({
     mutationFn: ({ id }: { id: string }) => deletedUserById(id),
   });
@@ -52,5 +57,6 @@ export const useUser = (params: Params) => {
     isPending,
     isError,
     refetch,
+    createSupport,
   };
 };

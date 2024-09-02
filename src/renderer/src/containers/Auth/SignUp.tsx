@@ -91,7 +91,7 @@ const SignUp = () => {
         <Form.Item<FieldType>
           label="Mật khẩu"
           name="password"
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }]}
+          rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }, {min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự"}]}
         >
           <Input.Password />
         </Form.Item>

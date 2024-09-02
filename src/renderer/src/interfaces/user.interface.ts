@@ -9,4 +9,6 @@ export interface User extends GeneralInfo {
   email: string;
   class: Class;
   videos: Video[];
+  mac: string;
+  password: string
 }

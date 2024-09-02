@@ -5,6 +5,8 @@ import { Helmet } from "react-helmet";
 import useAuth from "@renderer/hooks/useAuth";
 import notify from "@renderer/common/function/notify";
 import showLoading from "@renderer/common/function/showLoading";
+import { useCallback } from "react";
+import { showAlert } from "@renderer/common/function/swalAlert";
 
 type FieldType = {
   password: string;
@@ -32,6 +34,10 @@ const SignIn = () => {
         notify("error", err.response?.data?.message);
       });
   };
+
+  const handleForgotPassword = useCallback(() => {
+    showAlert("Quên mật khẩu", "Vui lòng liên hệ quản trị viên <br/>để được hỗ trợ đặt lại mật khẩu", "info")
+  }, [])
 
   // const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
   //   errorInfo
@@ -96,16 +102,21 @@ const SignIn = () => {
           wrapperCol={{ offset: 5, span: 16 }}
         >
           <div className="flex justify-between">
-            <Tooltip title="Duy trì đăng nhập trong 7 ngày">
+            {/* <Tooltip title="Duy trì đăng nhập trong 7 ngày">
               <Checkbox disabled checked>
                 Duy trì đăng nhập
               </Checkbox>
-            </Tooltip>
+            </Tooltip> */}
 
             <div>
               Chưa có tài khoản?{" "}
               <Link to={"/sign-up"} className="text-blue-700 cursor-pointer">
                 Đăng ký ngay
+              </Link>
+            </div>
+            <div onClick={handleForgotPassword}>
+              <Link to={"#"} className="text-blue-700 cursor-pointer">
+                Quên mật khẩu
               </Link>
             </div>
           </div>

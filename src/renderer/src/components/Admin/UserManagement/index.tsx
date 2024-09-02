@@ -23,14 +23,20 @@ import Error from "@renderer/components/Error";
 import notify from "@renderer/common/function/notify";
 import showLoading from "@renderer/common/function/showLoading";
 import { useVideo } from "@renderer/hooks/useVideo";
-import { Video } from "electron";
-import { DeleteOutlined, EditOutlined, SaveOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  EditOutlined,
+  PlusOutlined,
+  SaveOutlined,
+} from "@ant-design/icons";
 import {
   showAlert,
   showAlertConfirm,
   showAlertError,
 } from "@renderer/common/function/swalAlert";
 import { RoleEnum } from "@renderer/common/enum";
+import { Video } from "@renderer/interfaces/video.interface";
+import useAuth from "@renderer/hooks/useAuth";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -84,12 +90,14 @@ const showTotal: PaginationProps["showTotal"] = (total) =>
 
 const UserManagement = memo(() => {
   const [form] = Form.useForm();
+  const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalUsers, setTotalUsers] = useState(0);
   const [searchText, setSearchText] = useState("");
   const [selectedUser, setSelectedUser] = useState<User | undefined>(undefined);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalCreateOpen, setIsModalCreateOpen] = useState(false);
   const [classes, setClasses] = useState<Class[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
   const [dataUsers, setDataUsers] = useState<User[]>([]);
@@ -97,7 +105,7 @@ const UserManagement = memo(() => {
   const [selectedClassId, setSelectedClassId] = useState<string>("undefined");
   const { listClasses, isError: isErrorClass } = useClass();
   const { listVideos, isError: isErrorVideo } = useVideo({
-    classId: selectedUser?.class?.id,
+    classId: undefined,
   });
 
   const {
@@ -105,6 +113,7 @@ const UserManagement = memo(() => {
     isPending,
     isError,
     fetchUserById,
+    createSupport,
     updateUserById,
     deleteUserById,
     refetch,
@@ -126,10 +135,61 @@ const UserManagement = memo(() => {
     setPageSize(pageSize);
   }, []);
 
+  const handleShowModalCreate = useCallback(() => {
+    const fieldValues = {
+      name: "",
+      password: "",
+      mac: "",
+      email: "",
+    };
+
+    form.setFieldsValue(fieldValues);
+
+    setIsModalCreateOpen(true);
+  }, [form]);
+
+  const handleCreateSupport = useCallback((user: User) => {
+    const newSupport = {
+      name: user.name,
+      mac: user.mac,
+      password: user.password,
+      email: user.email,
+    };
+
+    showAlertConfirm({
+      title: "Thêm trợ giảng",
+      icon: "question",
+      confirmButtonText: "Thêm",
+      html: `Bạn có chắc chắn muốn thêm trợ giảng <b>${user.name}</b>?`,
+    }).then((confirm) => {
+      if (confirm.isConfirmed) {
+        showLoading(true);
+        createSupport({ data: newSupport })
+          .then(() => {
+            showAlert(
+              "Thành công",
+              `Trợ giảng <b>${user.name}</b> đã được thêm`,
+              "success"
+            ).then((confirm) => {
+              if (confirm.isConfirmed) {
+                handleCloseModal();
+
+                refetch();
+              }
+            });
+          })
+          .catch((err) => {
+            showAlertError(err);
+          });
+      }
+    });
+  }, []);
+
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedUser(undefined);
-  }, []);
+    setIsModalCreateOpen(false);
+  }, [form]);
 
   const handleDeleteUser = useCallback(() => {
     if (selectedUser) {
@@ -174,9 +234,15 @@ const UserManagement = memo(() => {
       id: user.id,
     })
       .then((res: User) => {
-        setSelectedUser(res);
+        const dataUser = {
+          ...res,
+          classId: res?.class?.id,
+          videoIds: res.videos.map((video) => video.id),
+          password: "",
+        };
+        setSelectedUser(dataUser);
 
-        if (res) {
+        if (dataUser) {
           showLoading(false);
           setIsModalOpen(true);
         }
@@ -238,6 +304,25 @@ const UserManagement = memo(() => {
         title: "Họ tên",
         dataIndex: "name",
         key: "name",
+        render: (name, user) =>
+          user?.role === RoleEnum.USER ? (
+            name
+          ) : (
+            <span className="flex items-center gap-x-2">
+              {name}{" "}
+              <Tag
+                color={
+                  user?.role === RoleEnum.ADMIN
+                    ? "red"
+                    : user?.role === RoleEnum.SUPPORT
+                      ? "purple"
+                      : "green"
+                }
+              >
+                {user?.role}
+              </Tag>
+            </span>
+          ),
       },
       {
         title: "Email",
@@ -312,33 +397,46 @@ const UserManagement = memo(() => {
       </div>
 
       <div className="p-4">
-        <div className="w-full mb-4 flex gap-x-6">
-          <div className="flex items-center gap-x-3">
-            <span>Theo trạng thái: </span>
-            <Select
-              options={options}
-              className="min-w-[200px]"
-              value={isActive}
-              onChange={(value) => setIsActive(value)}
-            />
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex gap-x-6">
+            <div className="flex items-center gap-x-3">
+              <span>Theo trạng thái: </span>
+              <Select
+                options={options}
+                className="min-w-[200px]"
+                value={isActive}
+                onChange={(value) => setIsActive(value)}
+              />
+            </div>
+            <div className="flex items-center gap-x-3">
+              <span>Theo lớp học: </span>
+              <Select
+                placeholder="Tất cả"
+                className="min-w-[200px]"
+                onChange={(value) => setSelectedClassId(value)}
+                value={selectedClassId}
+              >
+                <Select.Option value={"undefined"}>Tất cả</Select.Option>
+                {classes.map((item) => (
+                  <Select.Option key={item.id} value={item.id}>
+                    {item.name}
+                  </Select.Option>
+                ))}
+              </Select>
+            </div>
           </div>
-          <div className="flex items-center gap-x-3">
-            <span>Theo lớp học: </span>
-            <Select
-              placeholder="Tất cả"
-              className="min-w-[200px]"
-              onChange={(value) => setSelectedClassId(value)}
-              value={selectedClassId}
+
+          <div>
+            <Button
+              hidden={user?.role !== RoleEnum.ADMIN}
+              onClick={handleShowModalCreate}
+              type="primary"
             >
-              <Select.Option value={"undefined"}>Tất cả</Select.Option>
-              {classes.map((item) => (
-                <Select.Option key={item.id} value={item.id}>
-                  {item.name}
-                </Select.Option>
-              ))}
-            </Select>
+              <PlusOutlined /> Thêm trợ giảng
+            </Button>
           </div>
         </div>
+
         <Search
           placeholder="Tìm kiếm theo tên, email hoặc địa chỉ MAC"
           onSearch={handleSearch}
@@ -368,129 +466,234 @@ const UserManagement = memo(() => {
         />
       </div>
 
-      <Modal
-        title={
-          <>
-            Chỉnh sửa thông tin{" "}
-            <span className="text-blue-700 font-bold">
-              {selectedUser?.name}
-            </span>
-          </>
-        }
-        open={isModalOpen}
-        onCancel={handleCloseModal}
-        footer={null}
-        maskClosable={false}
-        keyboard={false}
-      >
-        <Form
-          form={form}
-          initialValues={selectedUser}
-          onFinish={handleSaveUser}
-          layout="horizontal"
-          labelCol={{ offset: 0, span: 8 }}
-          className="mt-6"
+      {isModalOpen && (
+        <Modal
+          title={
+            <>
+              Chỉnh sửa thông tin{" "}
+              <span className="text-blue-700 font-bold">
+                {selectedUser?.name}
+              </span>
+            </>
+          }
+          open={isModalOpen}
+          onCancel={handleCloseModal}
+          footer={null}
+          maskClosable={false}
+          keyboard={false}
         >
-          <Form.Item
-            label="Họ và tên"
-            name="name"
-            rules={[
-              { required: true, message: "Họ và tên không được để trống" },
-            ]}
+          <Form
+            form={form}
+            initialValues={selectedUser}
+            onFinish={handleSaveUser}
+            layout="horizontal"
+            labelCol={{ offset: 0, span: 8 }}
+            className="mt-6"
           >
-            <Input placeholder="Nhập tên" />
-          </Form.Item>
-          <Form.Item
-            label="Địa chỉ email"
-            name="email"
-            rules={[
-              { required: true, message: "Email không được để trống" },
-              { type: "email", message: "Email không hợp lệ" },
-            ]}
-          >
-            <Input placeholder="Nhập email" />
-          </Form.Item>
-          <Form.Item
-            label="MAC"
-            name="mac"
-            rules={[{ required: true, message: "MAC không được để trống" }]}
-          >
-            <Input placeholder="Nhập địa chỉ MAC" />
-          </Form.Item>
-          <Form.Item label="Lớp học" name="classId">
-            <Select placeholder="Chưa có lớp học">
-              {classes.map((cls) => (
-                <Option key={cls.id} value={cls.id}>
-                  {cls.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-
-          <Form.Item label="Video được xem" name="videoIds">
-            <Select
-              filterOption={(input, option) =>
-                option?.props.children
-                  .toLowerCase()
-                  .indexOf(input.toLowerCase()) >= 0 ||
-                option?.props.value
-                  .toLowerCase()
-                  .indexOf(input.toLowerCase()) >= 0
-              }
-              allowClear
-              mode="multiple"
-              placeholder="Chưa có Video"
+            <Form.Item
+              label="Họ và tên"
+              name="name"
+              rules={[
+                { required: true, message: "Họ và tên không được để trống" },
+              ]}
             >
-              {videos.map((video) => (
-                <Option key={video.id} value={video.id}>
-                  {video.name}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
-          <Form.Item label="Mật khẩu mới" name="password">
-            <Input.Password placeholder="Nhập mật khẩu mới (nếu muốn thay đổi)" />
-          </Form.Item>
-          <Form.Item
-            valuePropName="checked"
-            label="Trạng thái tài khoản"
-            name="isActive"
-            hidden={selectedUser?.role === RoleEnum.ADMIN}
-          >
-            <CustomSwitch
-              checkedChildren="Đang hoạt động"
-              unCheckedChildren="Vô hiệu hóa"
-            />
-          </Form.Item>
-
-          <Form.Item>
-            <div className={`flex justify-between`}>
-              <Tooltip
-                title={
-                  selectedUser?.role === RoleEnum.ADMIN
-                    ? "Không thể xóa tài khoản ADMIN"
-                    : undefined
-                }
+              <Input
+                disabled={user?.role !== RoleEnum.ADMIN}
+                placeholder="Nhập tên"
+              />
+            </Form.Item>
+            <Form.Item
+              label="Địa chỉ email"
+              name="email"
+              rules={[
+                { required: true, message: "Email không được để trống" },
+                { type: "email", message: "Email không hợp lệ" },
+              ]}
+            >
+              <Input
+                disabled={user?.role !== RoleEnum.ADMIN}
+                placeholder="Nhập email"
+              />
+            </Form.Item>
+            <Form.Item
+              hidden={user?.role !== RoleEnum.ADMIN}
+              label="MAC"
+              name="mac"
+              rules={[{ required: true, message: "MAC không được để trống" }]}
+            >
+              <Input placeholder="Nhập địa chỉ MAC" />
+            </Form.Item>
+            <Form.Item
+              hidden={selectedUser?.role !== RoleEnum.USER}
+              label="Lớp học"
+              name="classId"
+            >
+              <Select
+                disabled={user?.role !== RoleEnum.ADMIN}
+                placeholder="Chưa có lớp học"
               >
-                <Button
-                  disabled={selectedUser?.role === RoleEnum.ADMIN}
-                  onClick={handleDeleteUser}
-                  type="primary"
-                  danger
-                >
-                  <DeleteOutlined />
-                  Xóa
-                </Button>
-              </Tooltip>
+                {classes.map((cls) => (
+                  <Option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
 
-              <Button type="primary" htmlType="submit">
-                <SaveOutlined />
-                Cập nhật
-              </Button>
-            </div>
-          </Form.Item>
-        </Form>
-      </Modal>
+            <Form.Item
+              hidden={selectedUser?.role !== RoleEnum.USER}
+              label="Video được xem"
+              name="videoIds"
+            >
+              <Select
+                filterOption={(input, option) =>
+                  option?.props.children
+                    .toLowerCase()
+                    .indexOf(input.toLowerCase()) >= 0 ||
+                  option?.props.value
+                    .toLowerCase()
+                    .indexOf(input.toLowerCase()) >= 0
+                }
+                allowClear
+                mode="multiple"
+                placeholder="Chưa có Video"
+              >
+                {videos.map((video) => (
+                  <Option key={video.id} value={video.id}>
+                    {video.name}
+                  </Option>
+                ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              hidden={user?.role !== RoleEnum.ADMIN}
+              label="Mật khẩu mới"
+              name="password"
+              rules={[{ min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" }]}
+            >
+              <Input.Password placeholder="Nhập mật khẩu mới (nếu muốn thay đổi)" />
+            </Form.Item>
+            <Form.Item
+              valuePropName="checked"
+              label="Trạng thái tài khoản"
+              name="isActive"
+              hidden={
+                selectedUser?.role === RoleEnum.ADMIN ||
+                user?.role !== RoleEnum.ADMIN
+              }
+            >
+              <CustomSwitch
+                checkedChildren="Đang hoạt động"
+                unCheckedChildren="Vô hiệu hóa"
+              />
+            </Form.Item>
+
+            <Form.Item>
+              <div className={`flex justify-between`}>
+                {user?.role === RoleEnum.ADMIN ? (
+                  <Tooltip
+                    title={
+                      selectedUser?.role === RoleEnum.ADMIN
+                        ? "Không thể xóa tài khoản ADMIN"
+                        : undefined
+                    }
+                  >
+                    <Button
+                      disabled={selectedUser?.role === RoleEnum.ADMIN}
+                      onClick={handleDeleteUser}
+                      type="primary"
+                      danger
+                    >
+                      <DeleteOutlined />
+                      Xóa
+                    </Button>
+                  </Tooltip>
+                ) : (
+                  <div></div>
+                )}
+
+                <Button type="primary" htmlType="submit">
+                  <SaveOutlined />
+                  Cập nhật
+                </Button>
+              </div>
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
+
+      {isModalCreateOpen && (
+        <Modal
+          title={
+            <>
+              Thêm trợ giảng
+              <span className="text-blue-700 font-bold">
+                {selectedUser?.name}
+              </span>
+            </>
+          }
+          open={isModalCreateOpen}
+          onCancel={handleCloseModal}
+          footer={null}
+          maskClosable={false}
+          keyboard={false}
+        >
+          <Form
+            form={form}
+            onFinish={handleCreateSupport}
+            layout="horizontal"
+            labelCol={{ offset: 0, span: 8 }}
+            className="mt-6"
+          >
+            <Form.Item
+              label="Họ và tên"
+              name="name"
+              rules={[
+                { required: true, message: "Họ và tên không được để trống" },
+              ]}
+            >
+              <Input placeholder="Nhập tên" />
+            </Form.Item>
+            <Form.Item
+              label="Địa chỉ email"
+              name="email"
+              rules={[
+                { required: true, message: "Email không được để trống" },
+                { type: "email", message: "Email không hợp lệ" },
+              ]}
+            >
+              <Input placeholder="Nhập email" />
+            </Form.Item>
+            <Form.Item
+              label="MAC (NOTE)"
+              name="mac"
+              rules={[{ required: true, message: "MAC không được để trống" }]}
+            >
+              <Input placeholder="Ví dụ: Trợ giảng 1" />
+            </Form.Item>
+
+            <Form.Item
+              label="Mật khẩu"
+              name="password"
+              rules={[
+                { required: true, message: "Mật khẩu không được để trống" },
+                { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" },
+              ]}
+            >
+              <Input.Password placeholder="Nhập mật khẩu" />
+            </Form.Item>
+
+            <Form.Item>
+              <div className="flex justify-end">
+                <Button type="primary" htmlType="submit">
+                  <SaveOutlined />
+                  Thêm
+                </Button>
+              </div>
+            </Form.Item>
+          </Form>
+        </Modal>
+      )}
     </div>
   );
 });

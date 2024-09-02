@@ -17,7 +17,7 @@ function App(): JSX.Element {
   }, []);
 
   if (!isOK) {
-    return <Error />;
+    return <Error height="100vh"/>;
   }
 
   return (

@@ -9,8 +9,10 @@ import BackBtn from "@renderer/components/Button/BackBtn";
 import Error from "@renderer/components/Error";
 import Loader from "@renderer/components/Loader";
 import { useClass } from "@renderer/hooks/useClass";
+import { useFile } from "@renderer/hooks/useFile";
 import { useVideo } from "@renderer/hooks/useVideo";
 import { Class } from "@renderer/interfaces/class.interface";
+import { File } from "@renderer/interfaces/file.interface";
 import { Video } from "@renderer/interfaces/video.interface";
 import { Badge, Button, Card, Input, List, Select, Typography } from "antd";
 import dayjs from "dayjs";
@@ -22,6 +24,7 @@ const VideoManagement = () => {
   const [dataVideos, setDataVideos] = useState<Video[]>([]);
   const [selectedClassId, setSelectedClassId] = useState<string>("undefined");
   const [dataClasses, setDataClasses] = useState<Class[]>([]);
+  const [dataFile, setDataFile] = useState<File[]>([]);
   const {
     listVideos,
     isPending,
@@ -37,6 +40,11 @@ const VideoManagement = () => {
     isPending: isPendingClass,
     isError: isErrorClass,
   } = useClass();
+  const {
+    dataFileAPI,
+    isPending: isPendingFile,
+    isError: isErrorFile,
+  } = useFile();
   const isReadOnly = selectedClassId === "undefined";
 
   const [errors, setErrors] = useState<any>({});
@@ -70,6 +78,12 @@ const VideoManagement = () => {
       setDataClasses(listClasses.list);
     }
   }, [listClasses]);
+
+  useEffect(() => {
+    if (dataFileAPI) {
+      setDataFile(dataFileAPI.files);
+    }
+  }, [dataFileAPI]);
 
   const handleInputChange = (id: string, field: string, value: string) => {
     setDataVideos((prevData) =>
@@ -189,11 +203,11 @@ const VideoManagement = () => {
     showLoading(isUpdating);
   }, [isUpdating]);
 
-  if (isPending || isPendingClass) {
+  if (isPending || isPendingClass || isPendingFile) {
     return <Loader />;
   }
 
-  if (isError || isErrorClass) {
+  if (isError || isErrorClass || isErrorFile) {
     return <Error />;
   }
 
@@ -309,15 +323,27 @@ const VideoManagement = () => {
                     placeholder={isReadOnly ? "Không có mô tả" : "Nhập mô tả"}
                     readOnly={isReadOnly}
                   />
-                  <Input
+
+                  <Select
                     value={video.url}
-                    onChange={(e) =>
-                      handleInputChange(video.id, "url", e.target.value)
+                    onChange={(value) =>
+                      handleInputChange(video.id, "url", value)
                     }
                     onBlur={validate}
                     placeholder="Nhập URL"
-                    readOnly={isReadOnly}
-                  />
+                    className="w-full"
+                  >
+                    {dataFile.map((file) => (
+                      <Select.Option key={file.name} value={file.name}>
+                        {file.name}
+                      </Select.Option>
+                    ))}
+                  </Select>
+                  {dataFile.findIndex((item) => item.name === video.url) ===
+                    -1 &&
+                    video.url !== "" && (
+                      <span className="text-red-500">Đã bị xóa</span>
+                    )}
                   {errors[video.id]?.url && (
                     <span className="text-red-500">{errors[video.id].url}</span>
                   )}

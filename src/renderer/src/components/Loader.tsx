@@ -3,7 +3,7 @@ import { Spin } from "antd";
 
 const Loader = () => {
   return (
-    <div className="w-screen h-full flex items-center justify-center">
+    <div className="w-screen h-[50vh] h-full flex items-center justify-center">
       <Spin indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} />
     </div>
   );

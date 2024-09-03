@@ -43,6 +43,6 @@ publish:
   owner: junenghia
   repo: castudio-lib
   private: true
-  token: ${process.env.GH_TOKEN}
+  token: "token"
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

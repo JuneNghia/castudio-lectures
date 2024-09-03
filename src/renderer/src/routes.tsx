@@ -16,6 +16,7 @@ const VideoManagement = lazy(
 const WhiteListManagement = lazy(
   () => import("./components/Admin/WhiteListManagement")
 );
+const RepoManagement = lazy(() => import("./components/Admin/RepoManagement"));
 
 const router = createHashRouter([
   {
@@ -45,6 +46,10 @@ const router = createHashRouter([
       {
         path: "/admin/white-list",
         element: <WhiteListManagement />,
+      },
+      {
+        path: "/admin/repo",
+        element: <RepoManagement />,
       },
     ],
   },

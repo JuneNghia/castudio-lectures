@@ -5,6 +5,7 @@ import icon from "../../resources/icon.png?asset";
 import os from "os";
 import fs from "fs";
 import { autoUpdater } from "electron-updater";
+import "dotenv/config";
 
 const tokenFilePath = path.join(app.getPath("userData"), "jwtToken.json");
 const gotTheLock = app.requestSingleInstanceLock();
@@ -131,7 +132,8 @@ if (!gotTheLock) {
         type: "info",
         title: "Cập nhật phiên bản mới",
         message:
-          "Một phiên bản mới đã được phát hành. Ứng dụng sẽ tự tải xuống và cài đặt phiên bản mới",
+          "Một phiên bản mới đã được phát hành. Vui lòng nhấn vào nút Cập Nhật dưới đây để bắt đầu cập nhật. Ứng dụng sẽ tự tải xuống và thông báo đến bạn sau khi quá trình tải xuống hoàn tất",
+        buttons: ["CẬP NHẬT"],
       });
     });
 

@@ -1,4 +1,5 @@
 import {
+  CloudServerOutlined,
   FileDoneOutlined,
   HomeOutlined,
   TeamOutlined,
@@ -35,5 +36,12 @@ export const listMenu = [
       "Cho phép các địa chỉ email được phép đăng ký tài khoản theo lớp, khi người dùng đăng ký email sẽ tự động tham gia vào lớp học đã được phân bổ trước đó.",
     url: "/admin/white-list",
     icon: <FileDoneOutlined />,
+  },
+  {
+    name: "Quản lý kho lưu trữ",
+    description:
+      "Hiển thị danh sách, tải lên Video, xóa Video trên máy chủ lưu trữ",
+    url: "/admin/repo",
+    icon: <CloudServerOutlined />
   },
 ];

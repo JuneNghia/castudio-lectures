@@ -6,13 +6,15 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     define: {
-      'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL)
+      'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
+      'process.env.GH_TOKEN': JSON.stringify(process.env.GH_TOKEN)
     }
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
     define: {
-      'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL)
+      'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
+      'process.env.GH_TOKEN': JSON.stringify(process.env.GH_TOKEN)
     }
   },
   renderer: {
@@ -23,7 +25,8 @@ export default defineConfig({
     },
     plugins: [react()],
     define: {
-      'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL)
+      'process.env.VITE_API_URL': JSON.stringify(process.env.VITE_API_URL),
+      'process.env.GH_TOKEN': JSON.stringify(process.env.GH_TOKEN)
     }
   }
 })

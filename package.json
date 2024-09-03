@@ -1,10 +1,10 @@
 {
   "name": "castudio-lib",
-  "version": "1.0.1",
-  "description": "An Electron application with React and TypeScript",
+  "version": "1.0.0",
+  "description": "Ứng dụng học và quản lý video trực tuyến",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "CA STUDIO",
+  "homepage": "https://castudio.online",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint . --ext .js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix",

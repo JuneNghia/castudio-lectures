@@ -1,6 +1,4 @@
-import { ArrowLeftOutlined } from "@ant-design/icons";
 import { Video as VideoType } from "@renderer/interfaces/video.interface";
-import { Button, Tooltip } from "antd";
 import {
   Dispatch,
   memo,
@@ -11,6 +9,7 @@ import {
 } from "react";
 import showLoading from "@renderer/common/function/showLoading";
 import notify from "@renderer/common/function/notify";
+import BackBtn from "./Button/BackBtn";
 
 // Example link: https://drive.google.com/file/d/video/preview
 
@@ -40,12 +39,8 @@ const Video = memo(
     return (
       <>
         <div className="py-4 px-4 flex items-center gap-x-4">
-          <div className="w-fit" onClick={handleBack}>
-            <Tooltip title="Quay lại">
-              <Button>
-                <ArrowLeftOutlined />
-              </Button>
-            </Tooltip>
+          <div className="w-fit">
+            <BackBtn handleClick={handleBack} text="Quay lại"/>
           </div>
           <div>
             Bạn đang xem bài giảng{" "}

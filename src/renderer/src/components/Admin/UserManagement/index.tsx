@@ -349,12 +349,15 @@ const UserManagement = memo(() => {
       {
         title: "Hành động",
         key: "action",
-        render: (_, user) => (
-          <Button type="primary" onClick={() => handleEditUser(user)}>
-            <EditOutlined />
-            Sửa
-          </Button>
-        ),
+        render: (_, dataUser) =>
+          user?.role === RoleEnum.ADMIN ||
+          (user?.role === RoleEnum.SUPPORT &&
+            dataUser?.role === RoleEnum.USER) ? (
+            <Button type="primary" onClick={() => handleEditUser(dataUser)}>
+              <EditOutlined />
+              {user?.role === RoleEnum.SUPPORT ? "Gửi Video" : "Cập nhật"}
+            </Button>
+          ) : null,
       },
     ],
     []

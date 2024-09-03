@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import AuthService from "@renderer/services/auth.service";
 import notify from "@renderer/common/function/notify";
+import showLoading from "@renderer/common/function/showLoading";
 
 type FieldType = {
   password: string;
@@ -23,6 +24,7 @@ const SignUp = () => {
   const navigate = useNavigate();
 
   const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
+    showLoading(true);
     AuthService.signUp(
       values.name,
       values.email,
@@ -32,8 +34,11 @@ const SignUp = () => {
       .then(() => {
         notify("success", "Đăng ký tài khoản thành công");
         navigate("/sign-in");
+        showLoading(false)
       })
       .catch((err) => {
+        showLoading(false);
+
         notify("error", err.response?.data?.message);
       });
   };
@@ -91,7 +96,10 @@ const SignUp = () => {
         <Form.Item<FieldType>
           label="Mật khẩu"
           name="password"
-          rules={[{ required: true, message: "Vui lòng nhập mật khẩu" }, {min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự"}]}
+          rules={[
+            { required: true, message: "Vui lòng nhập mật khẩu" },
+            { min: 8, message: "Mật khẩu phải có ít nhất 8 ký tự" },
+          ]}
         >
           <Input.Password />
         </Form.Item>

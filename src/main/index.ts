@@ -4,12 +4,19 @@ import { electronApp, optimizer, is } from "@electron-toolkit/utils";
 import icon from "../../resources/icon.png?asset";
 import os from "os";
 import fs from "fs";
-import { loadPsList } from "./psListWrapper";
-import { winRecordingPrograms } from "./blackList";
+import { autoUpdater } from "electron-updater";
 
 const tokenFilePath = path.join(app.getPath("userData"), "jwtToken.json");
 const gotTheLock = app.requestSingleInstanceLock();
 let checkScreenRecorderInterval: NodeJS.Timeout | null = null;
+
+autoUpdater.setFeedURL({
+  provider: "github",
+  private: true,
+  owner: "junenghia",
+  repo: "castudio-lib",
+  token: process.env.GH_TOKEN,
+});
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -22,6 +29,7 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
+      devTools: true,
     },
   });
 
@@ -41,10 +49,6 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
-
-  checkScreenRecorderInterval = setInterval(() => {
-    checkForScreenRecorder(mainWindow);
-  }, 3000);
 }
 
 if (!gotTheLock) {
@@ -120,76 +124,49 @@ if (!gotTheLock) {
       }
     });
 
-    createWindow();
+    autoUpdater.checkForUpdatesAndNotify();
+
+    autoUpdater.on("update-available", () => {
+      dialog.showMessageBox({
+        type: "info",
+        title: "Cập nhật phiên bản mới",
+        message:
+          "Một phiên bản mới đã được phát hành. Ứng dụng sẽ tự tải xuống và cài đặt phiên bản mới",
+      });
+    });
+
+    autoUpdater.on("update-downloaded", () => {
+      dialog
+        .showMessageBox({
+          type: "info",
+          title: "Đã tải xuống phiên bản mới",
+          message:
+            "Phiên bản mới đã được tải xuống, nhấn vào nút CÀI ĐẶT dưới đây để tiến hành cài đặt",
+          buttons: ["CÀI ĐẶT"],
+        })
+        .then(() => {
+          autoUpdater.quitAndInstall();
+        });
+    });
+
+    autoUpdater.on("error", (error) => {
+      dialog.showErrorBox(
+        "Error",
+        `Không thể kiểm tra bản cập nhật: ${error == null ? "unknown" : (error.stack || error).toString()}`
+      );
+      app.quit();
+    });
+
+    autoUpdater.on("update-not-available", () => {
+      createWindow();
+    });
 
     app.on("activate", function () {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
-      if (BrowserWindow.getAllWindows().length === 0) createWindow();
-    });
-  });
-}
-
-const getProcesses = async () => {
-  try {
-    const psListModule = await loadPsList();
-    const processes = await psListModule.default();
-    return processes;
-  } catch (error) {
-    console.error("Error fetching processes:", error);
-    return [];
-  }
-};
-
-async function checkForScreenRecorder(
-  mainWindow: BrowserWindow
-): Promise<void> {
-  const detectedPrograms: string[] = [];
-
-  const processes = await getProcesses();
-
-  const timeNow = new Date().toLocaleString("vi-VN", {
-    timeZone: "Asia/Ho_Chi_Minh",
-  });
-
-  processes.forEach((process) => {
-    winRecordingPrograms.forEach((recordProgram) => {
-      if (process.name.toLowerCase() === recordProgram.toLowerCase()) {
-        detectedPrograms.push(process.name);
+      if (BrowserWindow.getAllWindows().length === 0) {
+        autoUpdater.on("update-not-available", () => {
+          createWindow();
+        });
       }
     });
   });
-
-  const foundRecorder = detectedPrograms.length > 0;
-
-  const programCount: Record<string, number> = detectedPrograms.reduce(
-    (acc: Record<string, number>, program: string) => {
-      acc[program] = (acc[program] || 0) + 1;
-      return acc;
-    },
-    {}
-  );
-
-  const uniquePrograms = Object.entries(programCount)
-    .map(([program, count]) => {
-      return count > 1 ? `${program} * ${count}` : program;
-    })
-    .join(", ");
-
-  if (foundRecorder) {
-    if (mainWindow.isVisible()) {
-      mainWindow.hide();
-
-      dialog.showMessageBoxSync({
-        type: "warning",
-        title: "Cảnh báo hành vi bất thường",
-        buttons: ["Chỉ nhấn vào dòng này khi bạn đã tắt hết"],
-        message: `Phát hiện hành vi chụp/quay màn hình. Chương trình sẽ TỰ KHỞI ĐỘNG LẠI sau vài giây khi các phần mềm liên quan đến chụp/quay màn hình được tắt (Thời gian phát hiện: ${timeNow}, ứng dụng nghi ngờ: ${uniquePrograms})`,
-      });
-    }
-  } else {
-    if (!mainWindow.isVisible()) {
-      mainWindow.show();
-    }
-  }
 }

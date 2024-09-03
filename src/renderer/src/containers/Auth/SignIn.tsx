@@ -1,4 +1,4 @@
-import { Button, Checkbox, Form, FormProps, Input, Tooltip } from "antd";
+import { Button, Form, FormProps, Input } from "antd";
 import logoImg from "@renderer/assets/logo.png";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet";
@@ -21,29 +21,38 @@ const SignIn = () => {
   const auth = useAuth();
 
   const onFinish: FormProps<FieldType>["onFinish"] = (values) => {
+    showLoading(true);
+
     auth
       .signIn(values.email, values.password, values.macAddress)
       .then(() => {
-        showLoading(true);
-
         setTimeout(() => {
           window.electronAPI.resetApp();
         }, 500);
       })
       .catch((err) => {
         notify("error", err.response?.data?.message);
+        showLoading(false);
       });
   };
 
   const handleForgotPassword = useCallback(() => {
-    showAlert("Quên mật khẩu", "Vui lòng liên hệ quản trị viên <br/>để được hỗ trợ đặt lại mật khẩu", "info")
-  }, [])
+    showAlert(
+      "Quên mật khẩu",
+      "Vui lòng liên hệ quản trị viên <br/>để được hỗ trợ đặt lại mật khẩu",
+      "info"
+    );
+  }, []);
 
   // const onFinishFailed: FormProps<FieldType>["onFinishFailed"] = (
   //   errorInfo
   // ) => {
   //   console.log("Failed:", errorInfo);
   // };
+
+  const getToken = async () => await window.electronAPI.readToken()
+
+  getToken().then((token) => console.log(token))
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-center">
@@ -60,8 +69,8 @@ const SignIn = () => {
         wrapperCol={{ span: 16 }}
         style={{ width: "100%" }}
         initialValues={{
-          email: "nguyenminhtrungnghia@gmail.com",
-          password: "Nmtn2006",
+          email: "",
+          password: "",
           remember: true,
         }}
         onFinish={onFinish}

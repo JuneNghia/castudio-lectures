@@ -27,7 +27,7 @@ const TopBar = () => {
         navigate("/sign-in");
       }
     });
-  }, []);
+  }, [signOut]);
 
   const handleResetApp = useCallback(() => {
     window.electronAPI.resetApp();

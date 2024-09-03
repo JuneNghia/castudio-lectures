@@ -18,6 +18,7 @@ import Loader from "@renderer/components/Loader";
 import Swal from "sweetalert2";
 import showLoading from "@renderer/common/function/showLoading";
 import axiosConfig from "@renderer/utils/axios";
+import notify from "@renderer/common/function/notify";
 
 interface AccessToken {
   id: string;
@@ -92,10 +93,15 @@ export const JWTProvider = ({ children }: { children: ReactNode }) => {
     return false;
   };
 
-  const signOut = () => {
-    window.electronAPI.deleteToken();
-    setSession(null);
-    dispatch({ type: LOGOUT });
+  const signOut = async () => {
+    const isDeletedToken = window.electronAPI.deleteToken();
+
+    if (isDeletedToken) {
+      setSession(null);
+      dispatch({ type: LOGOUT });
+    } else {
+      notify("error", "Lỗi xóa token")
+    }
   };
 
   // // CHECK TOKEN EXPIRE

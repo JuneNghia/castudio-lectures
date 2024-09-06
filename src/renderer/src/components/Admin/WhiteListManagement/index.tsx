@@ -9,6 +9,7 @@ import {
   Select,
   PaginationProps,
   Button,
+  Checkbox,
 } from "antd";
 import { Class } from "@renderer/interfaces/class.interface";
 import { useClass } from "@renderer/hooks/useClass";
@@ -17,13 +18,14 @@ import Error from "@renderer/components/Error";
 import { useWhiteList } from "@renderer/hooks/useWhiteList";
 import { WhiteList } from "@renderer/interfaces/whitelist.interface";
 import notify from "@renderer/common/function/notify";
-import { EditOutlined, SaveOutlined } from "@ant-design/icons";
+import { DeleteOutlined, EditOutlined, SaveOutlined } from "@ant-design/icons";
 import {
   showAlert,
   showAlertConfirm,
   showAlertError,
 } from "@renderer/common/function/swalAlert";
 import showLoading from "@renderer/common/function/showLoading";
+import { User } from "@renderer/interfaces/user.interface";
 
 const { Search } = Input;
 
@@ -42,18 +44,22 @@ const WhiteListManagement = memo(() => {
     undefined
   );
   const [data, setData] = useState<string | undefined>(undefined);
-  const {
-    listClasses,
-    isError: isErrorClass,
-  } = useClass();
+  const [isDelete, setIsDelete] = useState<boolean>(false);
+  const { listClasses, isError: isErrorClass } = useClass();
 
-  const { whiteList, refetch, isError, isPending, updateWLByClass } =
-    useWhiteList({
-      page: currentPage,
-      size: pageSize,
-      search: searchText,
-      classId: !selectedClass ? undefined : selectedClass.id,
-    });
+  const {
+    whiteList,
+    refetch,
+    isError,
+    isPending,
+    updateWLByClass,
+    deleteById,
+  } = useWhiteList({
+    page: currentPage,
+    size: pageSize,
+    search: searchText,
+    classId: !selectedClass ? undefined : selectedClass.id,
+  });
 
   const handleSearch = useCallback((value) => {
     setSearchText(value);
@@ -72,6 +78,44 @@ const WhiteListManagement = memo(() => {
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setData(undefined);
+    setIsDelete(false);
+  }, []);
+
+  const handleDeleteUser = useCallback((dataUser: User) => {
+    if (dataUser) {
+      showAlertConfirm({
+        title: "Xác nhận xóa",
+        icon: "warning",
+        confirmButtonText: "Xóa",
+        confirmButtonColor: "red",
+        html: `Bạn có chắc chắn muốn xóa vĩnh viễn địa chỉ email <b>${dataUser.email}</b>? <br/><br/><span class='font-bold text-red-700'>Lưu ý: Thao tác này không thể khôi phục</span>`,
+      }).then((confirm) => {
+        if (confirm.isConfirmed) {
+          showLoading(true);
+          deleteById({
+            id: dataUser.id,
+          })
+            .then(() => {
+              showAlert(
+                "Thành công",
+                `Địa chỉ email <b>${dataUser.email}</b> đã được xóa vĩnh viễn`,
+                "success"
+              ).then((confirm) => {
+                if (confirm.isConfirmed) {
+                  handleCloseModal();
+
+                  refetch();
+                }
+              });
+            })
+            .catch((err) => {
+              showAlertError(err);
+            });
+        }
+      });
+    } else {
+      notify("error", "Không lấy được ID người dùng");
+    }
   }, []);
 
   const handleSelectClass = useCallback(
@@ -100,8 +144,9 @@ const WhiteListManagement = memo(() => {
       const newData = {
         emails: data
           .split("\n")
-          .map((email) => email.trim())
+          .map((email) => email.trim().toLowerCase())
           .filter((email) => email),
+        isDelete,
       };
 
       if (selectedClass) {
@@ -109,7 +154,7 @@ const WhiteListManagement = memo(() => {
           title: "Xác nhận cập nhật",
           icon: "warning",
           confirmButtonText: "Cập nhật",
-          html: `Bạn có chắc chắn muốn cập nhật danh sách trắng cho lớp <b>${selectedClass.name}</b>? <br/><br/><span class='font-bold text-red-700'>Lưu ý: Thao tác này không thể khôi phục</span>`,
+          html: `Bạn có chắc chắn muốn ${isDelete ? "cập nhật toàn bộ email mới" : `thêm vào ${newData.emails.length} email`}  danh sách trắng cho lớp <b>${selectedClass.name}</b>? <br/><br/><span class='font-bold text-red-700'>Lưu ý: Thao tác này không thể khôi phục</span>`,
         }).then((confirm) => {
           if (confirm.isConfirmed) {
             showLoading(true);
@@ -139,7 +184,7 @@ const WhiteListManagement = memo(() => {
         notify("error", "Không lấy được ID của lớp cần cập nhật");
       }
     }
-  }, [data]);
+  }, [data, isDelete]);
 
   const columns = useMemo(
     () => [
@@ -153,6 +198,20 @@ const WhiteListManagement = memo(() => {
         dataIndex: "class",
         key: "className",
         render: (dataClass) => <div>{dataClass?.name}</div>,
+      },
+      {
+        title: "Hành động",
+        key: "action",
+        render: (_, dataUser) => (
+          <Button
+            type="primary"
+            danger
+            onClick={() => handleDeleteUser(dataUser)}
+          >
+            <DeleteOutlined />
+            Xóa
+          </Button>
+        ),
       },
     ],
     []
@@ -207,7 +266,7 @@ const WhiteListManagement = memo(() => {
           <div>
             {selectedClass ? (
               <Button onClick={handleShowModal} type="primary">
-                <EditOutlined /> Cập nhật
+                <EditOutlined /> Thêm / Cập nhật
               </Button>
             ) : (
               <span className="text-red-500 font-bold">
@@ -248,7 +307,7 @@ const WhiteListManagement = memo(() => {
       <Modal
         title={
           <>
-            Cập nhật cho lớp{" "}
+            {isDelete ? "Cập nhật cho" : "Thêm email vào"} lớp{" "}
             <span className="text-blue-700 font-bold">
               {selectedClass?.name}
             </span>
@@ -260,12 +319,18 @@ const WhiteListManagement = memo(() => {
         maskClosable={false}
         keyboard={false}
       >
-        <div className="font-bold mb-2">
-          Lưu ý quan trọng:{" "}
-          <span className="text-red-600 font-bold">
-            Dữ liệu mới sẽ thay thế hoàn toàn dữ liệu cũ
-          </span>
+        <div className="mb-2">
+          <Checkbox
+            checked={isDelete}
+            onChange={(e) => setIsDelete(e.target.checked)}
+          >
+            Cập nhật{" "}
+            <span className="text-red-600 font-bold">
+              (Dữ liệu mới sẽ thay thế hoàn toàn dữ liệu cũ)
+            </span>
+          </Checkbox>
         </div>
+
         <Input.TextArea
           value={data}
           placeholder="Mỗi dòng là một địa chỉ Email"
@@ -277,11 +342,13 @@ const WhiteListManagement = memo(() => {
           <div>
             <span>
               Số lượng email:{" "}
-              <span className="font-bold text-blue-700">{data?.split("\n").filter((email) => email).length || 0}</span>
+              <span className="font-bold text-blue-700">
+                {data?.split("\n").filter((email) => email).length || 0}
+              </span>
             </span>
           </div>
           <Button disabled={!data} onClick={handleSubmit} type="primary">
-            <SaveOutlined /> Cập nhật
+            <SaveOutlined /> {isDelete ? "Cập nhật" : "Thêm vào"}
           </Button>
         </div>
       </Modal>

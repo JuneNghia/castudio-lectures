@@ -163,12 +163,14 @@ if (!gotTheLock) {
       createWindow();
     });
 
-    app.on("activate", function () {
-      if (BrowserWindow.getAllWindows().length === 0) {
-        autoUpdater.on("update-not-available", () => {
-          createWindow();
-        });
-      }
-    });
+    // app.on("activate", function () {
+    //   if (BrowserWindow.getAllWindows().length === 0) {
+    //     autoUpdater.on("update-not-available", () => {
+    //       createWindow();
+    //     });
+
+    //     createWindow()
+    //   }
+    // });
   });
 }

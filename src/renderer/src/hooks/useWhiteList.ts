@@ -1,5 +1,6 @@
 import { QuerySearch } from "@renderer/common/interface/search.interface";
 import {
+  deletedById,
   fetchedWhiteList,
   updatedWLByClass,
 } from "@renderer/services/whitelist.service";
@@ -33,11 +34,17 @@ export const useWhiteList = (params: Params) => {
     mutationFn: ({ classId, data }: { classId: string; data: any }) =>
       updatedWLByClass(classId, data),
   });
+
+  const { mutateAsync: deleteById } = useMutation({
+    mutationFn: ({ id }: { id: string }) => deletedById(id),
+  });
+
   return {
     whiteList,
     isPending,
     isError,
     refetch,
     updateWLByClass,
+    deleteById
   };
 };

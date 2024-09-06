@@ -185,7 +185,12 @@ const ClassManagement = () => {
                     <div className="flex items-center gap-x-4">
                       <div>
                         Số lượng học viên:{" "}
-                        <span className="font-bold">{item.userCount}</span>
+                        <Tooltip title="Đã đăng ký">
+                          <span className="font-bold">{item.userCount} / </span>
+                        </Tooltip>
+                        <Tooltip title="Tổng trong danh sách trắng">
+                          <span className="font-bold">{item.whiteListCount}</span>
+                        </Tooltip>
                       </div>
                       <div>
                         Số lượng Video:{" "}
@@ -231,9 +236,7 @@ const ClassManagement = () => {
               <div className="flex justify-end items-center gap-x-4">
                 <div className="mt-4 cursor-pointer">
                   <Tooltip
-                    title={
-                      `Khi xóa lớp học sẽ xóa các video, danh sách trắng và học viên liên quan đến lớp ${item.name}`
-                    }
+                    title={`Khi xóa lớp học sẽ xóa các video, danh sách trắng và học viên liên quan đến lớp ${item.name}`}
                   >
                     <QuestionCircleOutlined />
                   </Tooltip>

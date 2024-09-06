@@ -332,6 +332,7 @@ const VideoManagement = () => {
                     onBlur={validate}
                     placeholder="Nhập URL"
                     className="w-full"
+                    disabled={isReadOnly}
                   >
                     {dataFile.map((file) => (
                       <Select.Option key={file.name} value={file.name}>
@@ -354,13 +355,13 @@ const VideoManagement = () => {
                         <div>
                           Thời gian tạo:{" "}
                           <span className="font-bold">
-                            {dayjs(video.createdAt).format("HH:mm DD/MM/YYYY")}
+                            {dayjs(video.createdAt).format("HH:mm:ss DD/MM/YYYY")}
                           </span>
                         </div>
                         <div>
                           Cập nhật lần cuối:{" "}
                           <span className="font-bold">
-                            {dayjs(video.updatedAt).format("HH:mm DD/MM/YYYY")}
+                            {dayjs(video.updatedAt).format("HH:mm:ss DD/MM/YYYY")}
                           </span>
                         </div>
                       </Typography.Text>

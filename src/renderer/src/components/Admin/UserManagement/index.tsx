@@ -37,6 +37,7 @@ import {
 import { RoleEnum } from "@renderer/common/enum";
 import { Video } from "@renderer/interfaces/video.interface";
 import useAuth from "@renderer/hooks/useAuth";
+import dayjs from "dayjs";
 
 const { Search } = Input;
 const { Option } = Select;
@@ -298,12 +299,13 @@ const UserManagement = memo(() => {
     [selectedUser]
   );
 
-  const columns = useMemo(
+  const columns: any = useMemo(
     () => [
       {
         title: "Họ tên",
         dataIndex: "name",
         key: "name",
+        width: 200,
         render: (name, user) =>
           user?.role === RoleEnum.USER ? (
             name
@@ -328,16 +330,19 @@ const UserManagement = memo(() => {
         title: "Email",
         dataIndex: "email",
         key: "email",
+        width: 200,
       },
       {
         title: "MAC",
         dataIndex: "mac",
         key: "mac",
+        width: 180,
       },
       {
         title: "Trạng thái",
         dataIndex: "isActive",
         key: "isActive",
+        align: "center",
         render: (isActive: boolean) => {
           return (
             <Tag color={isActive ? "success" : "error"}>
@@ -347,8 +352,18 @@ const UserManagement = memo(() => {
         },
       },
       {
+        title: "Ngày đăng ký",
+        dataIndex: "createdAt",
+        key: "createdAt",
+        align: "center",
+        render: (createdAt: string) => {
+          return dayjs(createdAt).format("DD/MM/YYYY");
+        },
+      },
+      {
         title: "Hành động",
         key: "action",
+        align: "center",
         render: (_, dataUser) =>
           user?.role === RoleEnum.ADMIN ||
           (user?.role === RoleEnum.SUPPORT &&
@@ -362,6 +377,7 @@ const UserManagement = memo(() => {
     ],
     []
   );
+
   useEffect(() => {
     if (listUsers) {
       setTotalUsers(listUsers.total);
@@ -454,6 +470,7 @@ const UserManagement = memo(() => {
           pagination={false}
           rowKey="id"
           sticky
+          bordered
         />
 
         <Pagination
@@ -668,11 +685,11 @@ const UserManagement = memo(() => {
               <Input placeholder="Nhập email" />
             </Form.Item>
             <Form.Item
-              label="MAC (NOTE)"
+              label="MAC"
               name="mac"
               rules={[{ required: true, message: "MAC không được để trống" }]}
             >
-              <Input placeholder="Ví dụ: Trợ giảng 1" />
+              <Input placeholder="Địa chỉ MAC của trợ giảng" />
             </Form.Item>
 
             <Form.Item

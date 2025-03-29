@@ -1,5 +1,5 @@
-appId: com.castudio.online.library
-productName: CAstudioOn Library
+appId: com.castudio.library
+productName: castudio-library
 directories:
   buildResources: build
 files:
@@ -12,11 +12,11 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: castudio-lib
+  executableName: CaStudio Library
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: ${productName}
-  uninstallDisplayName: ${productName}
+  shortcutName: CAstduioOn Library
+  uninstallDisplayName: ${productName}-${version}
   createDesktopShortcut: always
 mac:
   entitlementsInherit: build/entitlements.mac.plist

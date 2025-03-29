@@ -11,13 +11,23 @@ const tokenFilePath = path.join(app.getPath("userData"), "jwtToken.json");
 const gotTheLock = app.requestSingleInstanceLock();
 let checkScreenRecorderInterval: NodeJS.Timeout | null = null;
 
-autoUpdater.setFeedURL({
-  provider: "github",
-  private: true,
-  owner: "junenghia",
-  repo: "castudio-lib",
-  token: process.env.GH_TOKEN,
-});
+function checkMACAddress(): boolean {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    if (nets[name]) {
+      for (const net of nets[name]) {
+        if (
+          net.mac &&
+          /^(00:05:69|00:0C:29|00:1C:14|00:50:56)/i.test(net.mac)
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  return false;
+}
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
@@ -56,11 +66,17 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.whenReady().then(() => {
-    electronApp.setAppUserModelId("com.electron");
+    electronApp.setAppUserModelId("com.castudio.library");
 
     app.on("browser-window-created", (_, window) => {
       optimizer.watchWindowShortcuts(window);
     });
+
+    if(checkMACAddress()){
+      dialog.showErrorBox('Lỗi khởi động', 'Không thể khởi chạy phần mềm trên hệ điều hành được giả lập')
+
+      app.quit()
+    }
 
     ipcMain.handle("get-mac-address", () => {
       const networkInterfaces = os.networkInterfaces();
@@ -163,14 +179,14 @@ if (!gotTheLock) {
       createWindow();
     });
 
-    // app.on("activate", function () {
-    //   if (BrowserWindow.getAllWindows().length === 0) {
-    //     autoUpdater.on("update-not-available", () => {
-    //       createWindow();
-    //     });
+    app.on("activate", function () {
+      if (BrowserWindow.getAllWindows().length === 0) {
+        autoUpdater.on("update-not-available", () => {
+          createWindow();
+        });
 
-    //     createWindow()
-    //   }
-    // });
+        createWindow();
+      }
+    });
   });
 }

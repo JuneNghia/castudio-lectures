@@ -1,7 +1,7 @@
 {
-  "name": "castudio-lib",
-  "version": "1.0.2",
-  "description": "Ứng dụng học và quản lý video trực tuyến",
+  "name": "castudio-lectures",
+  "version": "1.0.3",
+  "description": "Bài giảng trực tuyến CA STUDIO",
   "main": "./out/main/index.js",
   "author": "CA STUDIO",
   "homepage": "https://castudio.online",

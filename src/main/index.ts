@@ -66,7 +66,7 @@ if (!gotTheLock) {
   app.quit();
 } else {
   app.whenReady().then(() => {
-    electronApp.setAppUserModelId("com.castudio.library");
+    electronApp.setAppUserModelId("com.castudio.lectures");
 
     app.on("browser-window-created", (_, window) => {
       optimizer.watchWindowShortcuts(window);

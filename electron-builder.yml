@@ -1,5 +1,5 @@
-appId: com.castudio.library
-productName: castudio-library
+appId: com.castudio.lectures
+productName: castudio-lectures
 directories:
   buildResources: build
 files:
@@ -12,10 +12,10 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: CaStudio Library
+  executableName: CaStudio Lectures
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
-  shortcutName: CAstduioOn Library
+  shortcutName: CaStudio Lectures
   uninstallDisplayName: ${productName}-${version}
   createDesktopShortcut: always
 mac:
@@ -41,8 +41,8 @@ npmRebuild: false
 publish:
   provider: github
   owner: junenghia
-  repo: castudio-lib
+  repo: castudio-lectures
   private: true
-  token: "token"
+  token: 'token'
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

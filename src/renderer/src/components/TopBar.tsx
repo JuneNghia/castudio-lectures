@@ -50,7 +50,7 @@ const TopBar = () => {
       </div>
       <div>
         <span className="font-bold text-blue-700 text-[1.3rem]">
-          CA Studio Online Library {version}
+          C.A Studio Lectures {version}
         </span>
       </div>
 

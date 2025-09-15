@@ -2,6 +2,11 @@ appId: com.castudio.lectures
 productName: castudio-lectures
 directories:
   buildResources: build
+extraResources:
+  - from: build/icon.png
+    to: rerender/assets/icon.png
+  - from: .env
+    to: .env
 files:
   - "!**/.vscode/*"
   - "!src/*"
@@ -13,11 +18,16 @@ asarUnpack:
   - resources/**
 win:
   executableName: CaStudio Lectures
+  icon: "resources/icon.ico"
+  requestedExecutionLevel: "requireAdministrator"
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: CaStudio Lectures
   uninstallDisplayName: ${productName}-${version}
   createDesktopShortcut: always
+  runAfterFinish: false
+  perMachine: true
+  packElevateHelper: true
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   extendInfo:
@@ -38,11 +48,5 @@ linux:
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
-publish:
-  provider: github
-  owner: junenghia
-  repo: castudio-lectures
-  private: true
-  token: 'token'
 electronDownload:
   mirror: https://npmmirror.com/mirrors/electron/

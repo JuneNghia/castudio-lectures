@@ -158,7 +158,7 @@ const RepoManagement = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="pb-8 grid grid-cols-3 gap-4">
         {files.map((item) => (
           <Card
             key={item.name}
